@@ -128,9 +128,9 @@
         .app-header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 2.25rem;
-            text-align: center;
+            text-align: left;
             flex: 1;
         }
 
@@ -143,16 +143,10 @@
             color: var(--text-light);
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
         }
 
         .dark-mode .app-title {
             color: var(--text-dark);
-        }
-
-        .title-dice {
-            font-size: 1.6rem;
-            filter: drop-shadow(0 3px 6px rgba(37, 99, 235, 0.32));
         }
 
         .control-bar {
@@ -284,44 +278,59 @@
         .dice {
             width: clamp(5.5rem, 13vw, 7rem);
             height: clamp(5.5rem, 13vw, 7rem);
-            background: linear-gradient(145deg, #ffffff, #e2e8f0);
+            background: linear-gradient(145deg, #ffffff 40%, #e2e8f0 60%, #cbd5e1 100%);
             border-radius: 1.3rem;
             position: relative;
             box-shadow:
-                0 18px 34px rgba(15, 23, 42, 0.15),
-                0 6px 16px rgba(30, 41, 59, 0.1),
-                inset 0 -6px 10px rgba(15, 23, 42, 0.07),
-                inset 0 7px 12px rgba(255, 255, 255, 0.82);
+                0 24px 48px rgba(15, 23, 42, 0.2),
+                0 12px 24px rgba(30, 41, 59, 0.12),
+                inset 0 -8px 16px rgba(15, 23, 42, 0.08),
+                inset 0 8px 16px rgba(255, 255, 255, 0.9),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.5);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             padding: 10%;
             gap: 6%;
             transform-style: preserve-3d;
+            transform: perspective(1000px) rotateX(5deg) rotateY(-5deg);
         }
 
         .dark-mode .dice {
-            background: linear-gradient(145deg, #334155, #1e293b);
+            background: linear-gradient(145deg, #475569 40%, #334155 60%, #1e293b 100%);
             box-shadow:
-                0 18px 34px rgba(2, 6, 23, 0.65),
-                0 6px 16px rgba(2, 6, 23, 0.45),
-                inset 0 -6px 10px rgba(2, 6, 23, 0.38),
-                inset 0 7px 12px rgba(255, 255, 255, 0.08);
+                0 24px 48px rgba(2, 6, 23, 0.7),
+                0 12px 24px rgba(2, 6, 23, 0.5),
+                inset 0 -8px 16px rgba(2, 6, 23, 0.45),
+                inset 0 8px 16px rgba(255, 255, 255, 0.12),
+                inset 0 0 0 2px rgba(148, 163, 184, 0.3);
         }
 
         .dot {
-            background: radial-gradient(circle at 35% 35%, #64748b, #1e293b);
             border-radius: 999px;
             width: 100%;
             height: 100%;
             box-shadow:
-                inset 0 3px 6px rgba(2, 6, 23, 0.48),
-                0 2px 4px rgba(255, 255, 255, 0.58),
-                0 3px 6px rgba(2, 6, 23, 0.25);
+                inset 0 4px 8px rgba(2, 6, 23, 0.5),
+                0 3px 6px rgba(255, 255, 255, 0.65),
+                0 4px 8px rgba(2, 6, 23, 0.3),
+                0 0 0 1px rgba(0, 0, 0, 0.1);
         }
 
-        .dark-mode .dot {
-            background: radial-gradient(circle at 35% 35%, #cbd5e1, #475569);
+        .dot-blue {
+            background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8, #1e3a8a);
+        }
+
+        .dot-red {
+            background: radial-gradient(circle at 30% 30%, #ef4444, #dc2626, #b91c1c);
+        }
+
+        .dark-mode .dot-blue {
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #3b82f6, #2563eb);
+        }
+
+        .dark-mode .dot-red {
+            background: radial-gradient(circle at 30% 30%, #f87171, #ef4444, #dc2626);
         }
 
         .dot-tl {
@@ -724,7 +733,7 @@
     <main class="app-shell" id="app-shell">
         <div class="header-wrapper">
             <header class="app-header">
-                <h1 class="app-title"><span class="title-dice">🎲</span>幸运掷骰子</h1>
+                <h1 class="app-title">幸运掷骰子</h1>
             </header>
 
             <section class="control-bar">
@@ -975,9 +984,10 @@
 
         function renderDiceEl(diceEl, value) {
             diceEl.innerHTML = "";
+            const isRedDot = value === 1 || value === 4;
             diceFaces[value].forEach((cls) => {
                 const dot = document.createElement("div");
-                dot.className = `dot ${cls}`;
+                dot.className = `dot ${isRedDot ? "dot-red" : "dot-blue"} ${cls}`;
                 diceEl.appendChild(dot);
             });
         }
