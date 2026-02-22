@@ -149,7 +149,7 @@
 
         .control-bar {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 0.45rem;
         }
 
@@ -217,90 +217,6 @@
             stroke-width: 1.9;
             stroke-linecap: round;
             stroke-linejoin: round;
-        }
-
-        .voice-panel {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            border-radius: 1rem;
-            border: 1px solid transparent;
-            pointer-events: none;
-        }
-
-        .voice-panel.open {
-            max-height: 190px;
-            opacity: 1;
-            pointer-events: auto;
-            border-color: rgba(148, 163, 184, 0.25);
-            background: rgba(248, 250, 252, 0.78);
-        }
-
-        .dark-mode .voice-panel.open {
-            background: rgba(30, 41, 59, 0.72);
-            border-color: rgba(148, 163, 184, 0.2);
-        }
-
-        .voice-panel-content {
-            padding: 0.75rem;
-            display: grid;
-            gap: 0.55rem;
-        }
-
-        .panel-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #334155;
-        }
-
-        .dark-mode .panel-title-row {
-            color: #e2e8f0;
-        }
-
-        .panel-title-row strong {
-            font-size: 0.82rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-        }
-
-        .voice-select {
-            width: 100%;
-            border-radius: 0.8rem;
-            border: 1px solid rgba(148, 163, 184, 0.35);
-            background: rgba(255, 255, 255, 0.95);
-            color: #1f2937;
-            font-size: 0.86rem;
-            padding: 0.58rem 0.72rem;
-            outline: none;
-        }
-
-        .dark-mode .voice-select {
-            background: rgba(51, 65, 85, 0.8);
-            color: #e2e8f0;
-            border-color: rgba(148, 163, 184, 0.35);
-        }
-
-        .test-btn {
-            border: none;
-            border-radius: 0.62rem;
-            padding: 0.37rem 0.6rem;
-            font-size: 0.74rem;
-            font-weight: 700;
-            color: #fff;
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            cursor: pointer;
-        }
-
-        .voice-preview {
-            margin: 0;
-            font-size: 0.75rem;
-            color: var(--muted-light);
-            text-align: center;
-        }
-
-        .dark-mode .voice-preview {
-            color: var(--muted-dark);
         }
 
         .count-switch {
@@ -548,24 +464,28 @@
 
         .stats-trigger {
             border: none;
-            border-radius: 0.9rem;
-            padding: 0.52rem 0.78rem;
-            font-size: 0.83rem;
-            font-weight: 700;
-            color: #1d4ed8;
-            background: rgba(219, 234, 254, 0.75);
-            border: 1px solid rgba(37, 99, 235, 0.26);
+            border-radius: 0.6rem;
+            padding: 0.28rem 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #94a3b8;
+            background: transparent;
             cursor: pointer;
+            opacity: 0.55;
+            transition: opacity 0.2s ease;
         }
 
         .stats-trigger:hover {
-            background: rgba(191, 219, 254, 0.88);
+            opacity: 0.85;
+            color: #64748b;
         }
 
         .dark-mode .stats-trigger {
-            color: #bfdbfe;
-            background: rgba(30, 64, 175, 0.2);
-            border-color: rgba(96, 165, 250, 0.35);
+            color: #64748b;
+        }
+
+        .dark-mode .stats-trigger:hover {
+            color: #94a3b8;
         }
 
         .stats-modal {
@@ -745,10 +665,6 @@
                 border-radius: 0.78rem;
             }
 
-            .voice-panel.open {
-                max-height: 168px;
-            }
-
             .dice-container-3d {
                 min-height: clamp(102px, 17dvh, 128px);
             }
@@ -791,26 +707,12 @@
             <button id="voice-toggle" class="icon-btn" onclick="toggleVoice()" title="语音播报开关" aria-label="语音播报开关">
                 <span id="voice-icon" class="icon-slot"></span>
             </button>
-            <button id="voice-settings-toggle" class="icon-btn" onclick="toggleVoicePanel()" title="语音播报设置" aria-label="语音播报设置">
-                <span id="voice-settings-icon" class="icon-slot"></span>
-            </button>
             <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()" title="浅色或深色模式" aria-label="浅色或深色模式">
                 <span id="theme-icon" class="icon-slot"></span>
             </button>
             <button id="fullscreen-toggle" class="icon-btn" onclick="toggleFullscreen()" title="全屏显示或退出" aria-label="全屏显示或退出">
                 <span id="fullscreen-icon" class="icon-slot"></span>
             </button>
-        </section>
-
-        <section id="voice-panel" class="voice-panel">
-            <div class="voice-panel-content">
-                <div class="panel-title-row">
-                    <strong>语音音色库（女声 5 + 男声 5）</strong>
-                    <button class="test-btn" onclick="testVoice()">试听</button>
-                </div>
-                <select id="voice-select" class="voice-select" onchange="changeVoice()"></select>
-                <p id="voice-preview" class="voice-preview">当前音色: 女声-轻柔</p>
-            </div>
         </section>
 
         <section class="count-switch" aria-label="骰子数量选择">
@@ -837,7 +739,7 @@
 
         <button id="roll-button" class="roll-button" onclick="rollDice()">🎲 开始投掷</button>
 
-        <button id="stats-trigger" class="stats-trigger" onclick="toggleStatsModal(true)">投掷点数分布（点击查看）</button>
+        <button id="stats-trigger" class="stats-trigger" onclick="toggleStatsModal(true)">统计分布</button>
     </main>
 
     <div id="stats-modal" class="stats-modal" aria-hidden="true">
@@ -857,84 +759,12 @@
     <script>
         const voiceProfiles = [
             {
-                label: "女声-轻柔",
+                label: "谷歌普通话女声",
                 gender: "female",
-                rate: 0.92,
-                pitch: 1.35,
+                rate: 1,
+                pitch: 1,
                 volume: 1,
-                keywords: ["xiaoxiao", "tingting", "female", "siri"]
-            },
-            {
-                label: "女声-明亮",
-                gender: "female",
-                rate: 1.02,
-                pitch: 1.27,
-                volume: 1,
-                keywords: ["yaoyao", "xiao", "huihui", "he"]
-            },
-            {
-                label: "女声-甜美",
-                gender: "female",
-                rate: 1.1,
-                pitch: 1.42,
-                volume: 1,
-                keywords: ["xiaoyi", "ting", "sunhi", "hanna"]
-            },
-            {
-                label: "女声-清晰",
-                gender: "female",
-                rate: 0.98,
-                pitch: 1.2,
-                volume: 1,
-                keywords: ["hui", "mei", "luna", "female"]
-            },
-            {
-                label: "女声-沉稳",
-                gender: "female",
-                rate: 0.9,
-                pitch: 1.08,
-                volume: 1,
-                keywords: ["xiaorui", "xiaoqiu", "victoria", "wen"]
-            },
-            {
-                label: "男声-温润",
-                gender: "male",
-                rate: 0.93,
-                pitch: 0.95,
-                volume: 1,
-                keywords: ["kangkang", "yunxi", "male", "siri"]
-            },
-            {
-                label: "男声-磁性",
-                gender: "male",
-                rate: 0.88,
-                pitch: 0.82,
-                volume: 1,
-                keywords: ["kang", "junjie", "xiaobei", "david"]
-            },
-            {
-                label: "男声-清朗",
-                gender: "male",
-                rate: 1.02,
-                pitch: 0.98,
-                volume: 1,
-                keywords: ["yunyang", "yunjian", "tom", "alex"]
-            },
-            {
-                label: "男声-低沉",
-                gender: "male",
-                rate: 0.86,
-                pitch: 0.74,
-                volume: 1,
-                keywords: ["yunze", "sam", "lee", "male"]
-            },
-            {
-                label: "男声-播音",
-                gender: "male",
-                rate: 0.95,
-                pitch: 0.88,
-                volume: 1,
-                keywords: ["yunhao", "bo", "liam", "zhong"]
+                keywords: ["google", "xiaoxiao", "zh-cn", "chinese"]
             }
         ];
 
@@ -952,7 +782,8 @@
             availableVoices: [],
             distribution: Array.from({ length: 13 }, () => 0),
             rollingSoundTimer: null,
-            isFullscreen: false
+            isFullscreen: false,
+            currentVoice: null
         };
 
         const dom = {
@@ -965,17 +796,12 @@
             voiceIcon: document.getElementById("voice-icon"),
             themeIcon: document.getElementById("theme-icon"),
             fullscreenIcon: document.getElementById("fullscreen-icon"),
-            voiceSettingsIcon: document.getElementById("voice-settings-icon"),
-            voicePanel: document.getElementById("voice-panel"),
-            voiceSelect: document.getElementById("voice-select"),
-            voicePreview: document.getElementById("voice-preview"),
             statsModal: document.getElementById("stats-modal"),
             statsChart: document.getElementById("stats-chart"),
             statsSummary: document.getElementById("stats-summary"),
             starsContainer: document.getElementById("stars-container"),
             soundButton: document.getElementById("sound-toggle"),
             voiceButton: document.getElementById("voice-toggle"),
-            voiceSettingsButton: document.getElementById("voice-settings-toggle"),
             themeButton: document.getElementById("theme-toggle"),
             fullscreenButton: document.getElementById("fullscreen-toggle")
         };
@@ -985,7 +811,6 @@
             soundOff: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.6 9H3v6h3.6L11 19V5Z"></path><path d="m15 9.5 4 5"></path><path d="m19 9.5-4 5"></path></svg>`,
             voiceOn: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M6 11a6 6 0 0 0 12 0"></path><path d="M12 17v4"></path><path d="M9 21h6"></path></svg>`,
             voiceOff: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="m4 4 16 16"></path><path d="M6 11a6 6 0 0 0 6 6"></path></svg>`,
-            settings: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11"></path><path d="M18 7h2"></path><circle cx="16" cy="7" r="2"></circle><path d="M4 17h4"></path><path d="M11 17h9"></path><circle cx="9" cy="17" r="2"></circle></svg>`,
             moon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.2 8.2 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"></path></svg>`,
             sun: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="m4.9 4.9 2.1 2.1"></path><path d="m17 17 2.1 2.1"></path><path d="M2 12h3"></path><path d="M19 12h3"></path><path d="m4.9 19.1 2.1-2.1"></path><path d="m17 7 2.1-2.1"></path></svg>`,
             fullscreenEnter: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5"></path><path d="M16 3h5v5"></path><path d="M3 16v5h5"></path><path d="M21 16v5h-5"></path></svg>`,
@@ -1142,51 +967,38 @@
         }
 
         function updateVoiceSelect() {
-            dom.voiceSelect.innerHTML = "";
-            voiceProfiles.forEach((profile, index) => {
-                const option = document.createElement("option");
-                option.value = String(index);
-                option.textContent = `${profile.label}${profile.voice ? ` (${profile.voice.name})` : ""}`;
-                if (index === state.selectedProfileIndex) {
-                    option.selected = true;
-                }
-                dom.voiceSelect.appendChild(option);
-            });
         }
 
         function updateVoicePreview() {
-            const profile = getCurrentProfile();
-            const voiceName = profile.voice ? ` / ${profile.voice.name}` : "";
-            dom.voicePreview.textContent = `当前音色: ${profile.label}${voiceName}`;
         }
 
         function loadVoices() {
             if (!("speechSynthesis" in window)) {
-                updateVoiceSelect();
-                updateVoicePreview();
                 return;
             }
 
             const allVoices = speechSynthesis.getVoices();
             state.availableVoices = allVoices;
 
-            const zhVoices = allVoices.filter((voice) => {
-                const text = normalizeText(`${voice.lang} ${voice.name}`);
-                return /zh|cmn|yue|chinese|中文/.test(text);
+            const profile = voiceProfiles[0];
+            const voice = allVoices.find((v) => {
+                const text = normalizeText(`${v.name} ${v.lang}`);
+                return profile.keywords.some((keyword) => text.includes(keyword));
             });
 
-            const pool = zhVoices.length ? zhVoices : allVoices;
-            const usedNames = new Set();
-
-            voiceProfiles.forEach((profile) => {
-                profile.voice = chooseVoiceForProfile(profile, pool, usedNames);
-                if (profile.voice) {
-                    usedNames.add(profile.voice.name);
+            if (voice) {
+                profile.voice = voice;
+                state.currentVoice = voice;
+            } else {
+                const zhVoice = allVoices.find((v) => {
+                    const text = normalizeText(`${v.lang}`);
+                    return /zh|cmn|chinese/.test(text);
+                });
+                if (zhVoice) {
+                    profile.voice = zhVoice;
+                    state.currentVoice = zhVoice;
                 }
-            });
-
-            updateVoiceSelect();
-            updateVoicePreview();
+            }
         }
 
         function speakText(text) {
@@ -1210,13 +1022,11 @@
         function refreshControls() {
             dom.soundIcon.innerHTML = state.soundEnabled ? ICONS.soundOn : ICONS.soundOff;
             dom.voiceIcon.innerHTML = state.voiceEnabled ? ICONS.voiceOn : ICONS.voiceOff;
-            dom.voiceSettingsIcon.innerHTML = ICONS.settings;
             dom.themeIcon.innerHTML = state.isDarkMode ? ICONS.sun : ICONS.moon;
             dom.fullscreenIcon.innerHTML = state.isFullscreen ? ICONS.fullscreenExit : ICONS.fullscreenEnter;
 
             dom.soundButton.classList.toggle("is-active", state.soundEnabled);
             dom.voiceButton.classList.toggle("is-active", state.voiceEnabled);
-            dom.voiceSettingsButton.classList.toggle("is-active", dom.voicePanel.classList.contains("open"));
             dom.themeButton.classList.toggle("is-active", state.isDarkMode);
             dom.fullscreenButton.classList.toggle("is-active", state.isFullscreen);
         }
@@ -1329,24 +1139,6 @@
                 window.speechSynthesis.cancel();
             }
             refreshControls();
-        };
-
-        window.toggleVoicePanel = function () {
-            dom.voicePanel.classList.toggle("open");
-            refreshControls();
-        };
-
-        window.changeVoice = function () {
-            const index = Number(dom.voiceSelect.value);
-            if (Number.isInteger(index) && index >= 0 && index < voiceProfiles.length) {
-                state.selectedProfileIndex = index;
-                updateVoicePreview();
-            }
-        };
-
-        window.testVoice = function () {
-            const profile = getCurrentProfile();
-            speakText(`你好，我是${profile.label}，现在进行语音测试。`);
         };
 
         window.toggleTheme = function () {
