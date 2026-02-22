@@ -3,343 +3,941 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎲 幸运掷骰子</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>幸运掷骰子</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --bg-light: radial-gradient(circle at 20% 15%, #fef3c7 0%, #ede9fe 34%, #dbeafe 68%, #f8fafc 100%);
+            --bg-dark: radial-gradient(circle at 20% 10%, #172554 0%, #111827 40%, #020617 100%);
+            --glass-light: rgba(255, 255, 255, 0.84);
+            --glass-dark: rgba(15, 23, 42, 0.86);
+            --text-light: #111827;
+            --text-dark: #f8fafc;
+            --muted-light: #4b5563;
+            --muted-dark: #cbd5e1;
+            --accent: #2563eb;
+            --accent-strong: #1d4ed8;
+            --card-radius: 2rem;
+        }
+
         * {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            box-sizing: border-box;
+            transition: background-color 0.24s ease, color 0.24s ease, border-color 0.24s ease, transform 0.24s ease;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            min-height: 100dvh;
+            font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
             -webkit-tap-highlight-color: transparent;
+            position: relative;
         }
 
-        /* 3D 骰子容器 */
+        .dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .bg-pattern {
+            position: absolute;
+            inset: 0;
+            opacity: 0.25;
+            background-image:
+                linear-gradient(30deg, rgba(59, 130, 246, 0.12) 12%, transparent 12.5%, transparent 87%, rgba(59, 130, 246, 0.12) 87.5%, rgba(59, 130, 246, 0.12)),
+                linear-gradient(150deg, rgba(99, 102, 241, 0.12) 12%, transparent 12.5%, transparent 87%, rgba(99, 102, 241, 0.12) 87.5%, rgba(99, 102, 241, 0.12));
+            background-size: 72px 42px;
+            pointer-events: none;
+        }
+
+        #stars-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.24s ease;
+        }
+
+        .dark-mode #stars-container {
+            opacity: 1;
+        }
+
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            animation: twinkle 3.8s infinite;
+            box-shadow: 0 0 8px rgba(226, 232, 240, 0.8);
+        }
+
+        @keyframes twinkle {
+            0%,
+            100% {
+                opacity: 0.25;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.25);
+            }
+        }
+
+        .app-shell {
+            position: relative;
+            z-index: 2;
+            width: min(440px, calc(100vw - 1rem));
+            min-height: min(790px, calc(100dvh - 1rem));
+            max-height: calc(100dvh - 1rem);
+            border-radius: var(--card-radius);
+            padding: calc(1rem + var(--safe-top)) 1rem calc(1rem + var(--safe-bottom));
+            background: var(--glass-light);
+            backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 24px 60px rgba(30, 41, 59, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.45rem, 1.25vh, 0.9rem);
+            overflow: hidden;
+        }
+
+        .dark-mode .app-shell {
+            background: var(--glass-dark);
+            border-color: rgba(148, 163, 184, 0.25);
+            box-shadow: 0 26px 58px rgba(2, 6, 23, 0.7);
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 2.25rem;
+            text-align: center;
+        }
+
+        .app-title {
+            margin: 0;
+            font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+            line-height: 1.05;
+            font-weight: 900;
+            letter-spacing: 0.03em;
+            color: var(--text-light);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .dark-mode .app-title {
+            color: var(--text-dark);
+        }
+
+        .title-dice {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 3px 6px rgba(37, 99, 235, 0.32));
+        }
+
+        .control-bar {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.45rem;
+        }
+
+        .icon-btn {
+            height: 2.35rem;
+            width: 100%;
+            border-radius: 0.9rem;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(248, 250, 252, 0.85);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #334155;
+            padding: 0;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(37, 99, 235, 0.42);
+        }
+
+        .icon-btn:active {
+            transform: translateY(0);
+        }
+
+        .icon-btn.is-active {
+            border-color: rgba(37, 99, 235, 0.62);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.22);
+            color: #1d4ed8;
+            background: rgba(219, 234, 254, 0.9);
+        }
+
+        .dark-mode .icon-btn {
+            border-color: rgba(148, 163, 184, 0.3);
+            background: rgba(30, 41, 59, 0.82);
+            color: #e2e8f0;
+            box-shadow: 0 4px 12px rgba(2, 6, 23, 0.35);
+        }
+
+        .dark-mode .icon-btn:hover {
+            border-color: rgba(96, 165, 250, 0.7);
+        }
+
+        .dark-mode .icon-btn.is-active {
+            background: rgba(30, 64, 175, 0.36);
+            color: #bfdbfe;
+            border-color: rgba(96, 165, 250, 0.8);
+        }
+
+        .icon-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        .icon-slot svg {
+            width: 100%;
+            height: 100%;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .voice-panel {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            border-radius: 1rem;
+            border: 1px solid transparent;
+            pointer-events: none;
+        }
+
+        .voice-panel.open {
+            max-height: 190px;
+            opacity: 1;
+            pointer-events: auto;
+            border-color: rgba(148, 163, 184, 0.25);
+            background: rgba(248, 250, 252, 0.78);
+        }
+
+        .dark-mode .voice-panel.open {
+            background: rgba(30, 41, 59, 0.72);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        .voice-panel-content {
+            padding: 0.75rem;
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .panel-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #334155;
+        }
+
+        .dark-mode .panel-title-row {
+            color: #e2e8f0;
+        }
+
+        .panel-title-row strong {
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+        }
+
+        .voice-select {
+            width: 100%;
+            border-radius: 0.8rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(255, 255, 255, 0.95);
+            color: #1f2937;
+            font-size: 0.86rem;
+            padding: 0.58rem 0.72rem;
+            outline: none;
+        }
+
+        .dark-mode .voice-select {
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .test-btn {
+            border: none;
+            border-radius: 0.62rem;
+            padding: 0.37rem 0.6rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            cursor: pointer;
+        }
+
+        .voice-preview {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--muted-light);
+            text-align: center;
+        }
+
+        .dark-mode .voice-preview {
+            color: var(--muted-dark);
+        }
+
+        .count-switch {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.34rem;
+            background: rgba(226, 232, 240, 0.55);
+            padding: 0.34rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .dark-mode .count-switch {
+            background: rgba(30, 41, 59, 0.66);
+            border-color: rgba(148, 163, 184, 0.24);
+        }
+
+        .count-label {
+            cursor: pointer;
+        }
+
+        .count-label input {
+            display: none;
+        }
+
+        .count-option {
+            text-align: center;
+            font-size: 0.86rem;
+            font-weight: 800;
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.35rem;
+            color: #475569;
+            border: 1px solid transparent;
+        }
+
+        .dark-mode .count-option {
+            color: #cbd5e1;
+        }
+
+        .count-label input:checked + .count-option {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 7px 14px rgba(37, 99, 235, 0.28);
+        }
+
         .dice-container-3d {
             perspective: 1000px;
+            min-height: clamp(120px, 18dvh, 160px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(0.75rem, 3vw, 1.8rem);
         }
 
-        /* 骰子主容器样式 */
         .dice {
-            width: 7rem;
-            height: 7rem;
-            background: linear-gradient(145deg, #ffffff, #f0f0f0);
-            border-radius: 1.5rem;
+            width: clamp(5.5rem, 13vw, 7rem);
+            height: clamp(5.5rem, 13vw, 7rem);
+            background: linear-gradient(145deg, #ffffff, #e2e8f0);
+            border-radius: 1.3rem;
             position: relative;
             box-shadow:
-                0 20px 40px rgba(0, 0, 0, 0.15),
-                0 8px 16px rgba(0, 0, 0, 0.1),
-                inset 0 -8px 16px rgba(0, 0, 0, 0.05),
-                inset 0 8px 16px rgba(255, 255, 255, 0.9);
+                0 18px 34px rgba(15, 23, 42, 0.15),
+                0 6px 16px rgba(30, 41, 59, 0.1),
+                inset 0 -6px 10px rgba(15, 23, 42, 0.07),
+                inset 0 7px 12px rgba(255, 255, 255, 0.82);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             padding: 10%;
             gap: 6%;
             transform-style: preserve-3d;
-            transition: transform 0.3s ease;
         }
 
         .dark-mode .dice {
-            background: linear-gradient(145deg, #374151, #1f2937);
+            background: linear-gradient(145deg, #334155, #1e293b);
             box-shadow:
-                0 20px 40px rgba(0, 0, 0, 0.4),
-                0 8px 16px rgba(0, 0, 0, 0.3),
-                inset 0 -8px 16px rgba(0, 0, 0, 0.3),
-                inset 0 8px 16px rgba(255, 255, 255, 0.1);
+                0 18px 34px rgba(2, 6, 23, 0.65),
+                0 6px 16px rgba(2, 6, 23, 0.45),
+                inset 0 -6px 10px rgba(2, 6, 23, 0.38),
+                inset 0 7px 12px rgba(255, 255, 255, 0.08);
         }
 
-        /* 骰子点样式 */
         .dot {
-            background: radial-gradient(circle at 35% 35%, #6b7280, #1f2937);
-            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #64748b, #1e293b);
+            border-radius: 999px;
             width: 100%;
             height: 100%;
-            box-shadow: 
-                inset 0 3px 6px rgba(0, 0, 0, 0.5), 
-                0 2px 4px rgba(255, 255, 255, 0.6),
-                0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
+            box-shadow:
+                inset 0 3px 6px rgba(2, 6, 23, 0.48),
+                0 2px 4px rgba(255, 255, 255, 0.58),
+                0 3px 6px rgba(2, 6, 23, 0.25);
         }
 
         .dark-mode .dot {
-            background: radial-gradient(circle at 35% 35%, #9ca3af, #4b5563);
+            background: radial-gradient(circle at 35% 35%, #cbd5e1, #475569);
         }
 
-        /* 摇晃动画 - 更流畅 */
+        .dot-tl {
+            grid-area: 1 / 1 / 2 / 2;
+        }
+
+        .dot-tr {
+            grid-area: 1 / 3 / 2 / 4;
+        }
+
+        .dot-ml {
+            grid-area: 2 / 1 / 3 / 2;
+        }
+
+        .dot-mc {
+            grid-area: 2 / 2 / 3 / 3;
+        }
+
+        .dot-mr {
+            grid-area: 2 / 3 / 3 / 4;
+        }
+
+        .dot-bl {
+            grid-area: 3 / 1 / 4 / 2;
+        }
+
+        .dot-br {
+            grid-area: 3 / 3 / 4 / 4;
+        }
+
         @keyframes shake {
-            0% { transform: rotate(0deg) translate(0, 0) scale(1); }
-            15% { transform: rotate(-15deg) translate(-6px, -3px) scale(1.05); }
-            30% { transform: rotate(12deg) translate(6px, 3px) scale(1.03); }
-            45% { transform: rotate(-12deg) translate(-4px, 6px) scale(1.02); }
-            60% { transform: rotate(8deg) translate(4px, -6px) scale(1.01); }
-            75% { transform: rotate(-6deg) translate(-2px, 4px) scale(1); }
-            100% { transform: rotate(0deg) translate(0, 0) scale(1); }
+            0% {
+                transform: rotate(0deg) translate(0, 0) scale(1);
+            }
+
+            20% {
+                transform: rotate(-14deg) translate(-5px, -3px) scale(1.05);
+            }
+
+            40% {
+                transform: rotate(10deg) translate(5px, 2px) scale(1.03);
+            }
+
+            60% {
+                transform: rotate(-9deg) translate(-4px, 4px) scale(1.02);
+            }
+
+            80% {
+                transform: rotate(6deg) translate(3px, -3px) scale(1.01);
+            }
+
+            100% {
+                transform: rotate(0deg) translate(0, 0) scale(1);
+            }
         }
 
         .shake {
-            animation: shake 0.15s infinite;
+            animation: shake 0.14s infinite;
         }
 
-        /* 结果弹跳动画 */
         @keyframes bounce-in {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.45);
+                opacity: 0;
+            }
+
+            60% {
+                transform: scale(1.08);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .bounce-in {
-            animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: bounce-in 0.48s cubic-bezier(0.66, -0.56, 0.33, 1.4);
         }
 
-        /* 单选按钮样式 */
-        .radio-label input:checked+div {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        .result-wrapper {
+            display: flex;
+            justify-content: center;
         }
 
-        .dark-mode .radio-label input:checked+div {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        .result-box {
+            min-width: 66%;
+            text-align: center;
+            border-radius: 1rem;
+            border: 2px solid rgba(37, 99, 235, 0.34);
+            background: rgba(239, 246, 255, 0.78);
+            padding: 0.55rem 0.85rem;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.13);
         }
 
-        /* 切换开关样式 */
-        .toggle-switch {
-            position: relative;
-            width: 52px;
-            height: 28px;
-            background: #d1d5db;
-            border-radius: 14px;
+        .dark-mode .result-box {
+            background: rgba(30, 64, 175, 0.2);
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .result-text {
+            margin: 0;
+            font-size: clamp(1.25rem, 3.6vw, 1.65rem);
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            color: #1f2937;
+        }
+
+        .dark-mode .result-text {
+            color: #f8fafc;
+        }
+
+        .roll-button {
+            border: none;
+            border-radius: 1rem;
+            padding: 0.78rem 1rem;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #1e3a8a);
             cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(24px);
-        }
-
-        /* 按钮悬浮效果 */
-        .btn-glow {
+            box-shadow: 0 14px 24px rgba(37, 99, 235, 0.32);
             position: relative;
             overflow: hidden;
         }
 
-        .btn-glow::before {
-            content: '';
+        .roll-button::before {
+            content: "";
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s ease;
+            inset: 0;
+            background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            transform: translateX(-120%);
+            transition: transform 0.55s ease;
         }
 
-        .btn-glow:hover::before {
-            left: 100%;
+        .roll-button:hover::before {
+            transform: translateX(120%);
         }
 
-        /* 暗黑模式背景 */
-        .dark-mode {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        .roll-button:active {
+            transform: scale(0.98);
         }
 
-        /* 玻璃拟态卡片 */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+        .roll-button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .dark-mode .glass-card {
-            background: rgba(30, 41, 59, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .stats-trigger {
+            border: none;
+            border-radius: 0.9rem;
+            padding: 0.52rem 0.78rem;
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            background: rgba(219, 234, 254, 0.75);
+            border: 1px solid rgba(37, 99, 235, 0.26);
+            cursor: pointer;
         }
 
-        /* 骰点网格分布位置 */
-        .dot-tl { grid-area: 1 / 1 / 2 / 2; }
-        .dot-tr { grid-area: 1 / 3 / 2 / 4; }
-        .dot-ml { grid-area: 2 / 1 / 3 / 2; }
-        .dot-mc { grid-area: 2 / 2 / 3 / 3; }
-        .dot-mr { grid-area: 2 / 3 / 3 / 4; }
-        .dot-bl { grid-area: 3 / 1 / 4 / 2; }
-        .dot-br { grid-area: 3 / 3 / 4 / 4; }
-
-        /* 星星闪烁动画 */
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); }
+        .stats-trigger:hover {
+            background: rgba(191, 219, 254, 0.88);
         }
 
-        .star {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
+        .dark-mode .stats-trigger {
+            color: #bfdbfe;
+            background: rgba(30, 64, 175, 0.2);
+            border-color: rgba(96, 165, 250, 0.35);
         }
 
-        .dark-mode .star {
-            display: block;
-        }
-
-        body:not(.dark-mode) .star {
-            display: none;
-        }
-
-        /* 语音选择下拉框样式 */
-        .voice-select {
-            appearance: none;
-            background-color: white;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-        }
-
-        .dark-mode .voice-select {
-            background-color: #374151;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        }
-
-        /* 语音设置面板 */
-        .voice-panel {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.3s ease;
+        .stats-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.48);
             opacity: 0;
+            pointer-events: none;
         }
 
-        .voice-panel.open {
-            max-height: 400px;
+        .stats-modal.open {
             opacity: 1;
+            pointer-events: auto;
+        }
+
+        .stats-card {
+            width: min(520px, calc(100vw - 1.2rem));
+            margin: 0.6rem;
+            border-radius: 1.15rem;
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.32);
+            padding: 0.85rem;
+            transform: translateY(18px);
+            transition: transform 0.24s ease;
+        }
+
+        .dark-mode .stats-card {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .stats-modal.open .stats-card {
+            transform: translateY(0);
+        }
+
+        .stats-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-header h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .mini-btn {
+            border: none;
+            border-radius: 0.65rem;
+            padding: 0.34rem 0.6rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, #334155, #0f172a);
+        }
+
+        .mini-btn.secondary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        .stats-summary {
+            margin: 0.1rem 0 0.72rem;
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+
+        .dark-mode .stats-summary {
+            color: #94a3b8;
+        }
+
+        .stats-chart {
+            height: 180px;
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 0.35rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.2rem;
+        }
+
+        .stat-count {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            min-height: 0.82rem;
+        }
+
+        .dark-mode .stat-count {
+            color: #93c5fd;
+        }
+
+        .stat-track {
+            width: 100%;
+            height: 128px;
+            border-radius: 0.5rem;
+            background: linear-gradient(180deg, rgba(203, 213, 225, 0.32), rgba(203, 213, 225, 0.56));
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+
+        .dark-mode .stat-track {
+            background: linear-gradient(180deg, rgba(51, 65, 85, 0.45), rgba(51, 65, 85, 0.9));
+        }
+
+        .stat-bar {
+            width: 100%;
+            min-height: 4px;
+            border-radius: 0.5rem 0.5rem 0 0;
+            background: linear-gradient(180deg, #60a5fa, #1d4ed8);
+            transform-origin: bottom;
+            box-shadow: 0 5px 10px rgba(37, 99, 235, 0.35);
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .dark-mode .stat-label {
+            color: #cbd5e1;
+        }
+
+        .stats-actions {
+            margin-top: 0.78rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.45rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+                justify-content: flex-start;
+            }
+
+            .app-shell {
+                width: 100vw;
+                min-height: 100dvh;
+                max-height: 100dvh;
+                max-width: none;
+                border-radius: 0;
+                margin: 0;
+                padding: calc(0.78rem + var(--safe-top)) 0.8rem calc(0.86rem + var(--safe-bottom));
+                box-shadow: none;
+                border-width: 0;
+                gap: 0.5rem;
+            }
+
+            .app-title {
+                font-size: 1.32rem;
+            }
+
+            .icon-btn {
+                height: 2.2rem;
+                border-radius: 0.78rem;
+            }
+
+            .voice-panel.open {
+                max-height: 168px;
+            }
+
+            .dice-container-3d {
+                min-height: clamp(102px, 17dvh, 128px);
+            }
+
+            .result-box {
+                min-width: 74%;
+                padding: 0.46rem 0.72rem;
+            }
+
+            .roll-button {
+                padding: 0.72rem 0.9rem;
+            }
+
+            .stats-card {
+                width: calc(100vw - 0.8rem);
+                margin: 0.4rem;
+                border-radius: 0.9rem;
+            }
+
+            .stats-chart {
+                gap: 0.24rem;
+            }
         }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center min-h-screen w-full relative overflow-hidden">
+<body>
+    <div class="bg-pattern"></div>
+    <div id="stars-container"></div>
 
-    <!-- 背景装饰图案 -->
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wMykiLz48L3N2Zz4=')] opacity-30"></div>
+    <main class="app-shell" id="app-shell">
+        <header class="app-header">
+            <h1 class="app-title"><span class="title-dice">🎲</span>幸运掷骰子</h1>
+        </header>
 
-    <!-- 暗黑模式星星背景 -->
-    <div id="stars-container" class="absolute inset-0 pointer-events-none"></div>
+        <section class="control-bar">
+            <button id="sound-toggle" class="icon-btn" onclick="toggleSound()" title="音效开关" aria-label="音效开关">
+                <span id="sound-icon" class="icon-slot"></span>
+            </button>
+            <button id="voice-toggle" class="icon-btn" onclick="toggleVoice()" title="语音播报开关" aria-label="语音播报开关">
+                <span id="voice-icon" class="icon-slot"></span>
+            </button>
+            <button id="voice-settings-toggle" class="icon-btn" onclick="toggleVoicePanel()" title="语音播报设置" aria-label="语音播报设置">
+                <span id="voice-settings-icon" class="icon-slot"></span>
+            </button>
+            <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()" title="浅色或深色模式" aria-label="浅色或深色模式">
+                <span id="theme-icon" class="icon-slot"></span>
+            </button>
+            <button id="fullscreen-toggle" class="icon-btn" onclick="toggleFullscreen()" title="全屏显示或退出" aria-label="全屏显示或退出">
+                <span id="fullscreen-icon" class="icon-slot"></span>
+            </button>
+        </section>
 
-    <!-- 主容器 -->
-    <div class="glass-card w-full max-w-md mx-4 rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] p-8 relative z-10">
-
-        <!-- 顶部工具栏 -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-extrabold text-gray-800 dark:text-white tracking-tight flex items-center gap-2">
-                <span class="text-3xl drop-shadow-md">🎲</span>
-                幸运掷骰子
-            </h1>
-            <div class="flex gap-2">
-                <!-- 音效开关 -->
-                <button id="sound-toggle" onclick="toggleSound()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="音效开关">
-                    <span id="sound-icon" class="text-xl">🔊</span>
-                </button>
-                <!-- 语音开关 -->
-                <button id="voice-toggle" onclick="toggleVoice()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="语音播报">
-                    <span id="voice-icon" class="text-xl">🗣️</span>
-                </button>
-                <!-- 语音设置 -->
-                <button id="voice-settings-toggle" onclick="toggleVoicePanel()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="语音设置">
-                    <span id="voice-settings-icon" class="text-xl">⚙️</span>
-                </button>
-                <!-- 暗黑模式开关 -->
-                <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="切换主题">
-                    <span id="theme-icon" class="text-xl">🌙</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- 语音设置面板 -->
-        <div id="voice-panel" class="voice-panel mb-4">
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">语音音色</span>
-                    <button onclick="testVoice()" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition-colors">
-                        试听
-                    </button>
+        <section id="voice-panel" class="voice-panel">
+            <div class="voice-panel-content">
+                <div class="panel-title-row">
+                    <strong>语音音色库（女声 5 + 男声 5）</strong>
+                    <button class="test-btn" onclick="testVoice()">试听</button>
                 </div>
-                <select id="voice-select" onchange="changeVoice()" class="voice-select w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                    <option value="">加载语音中...</option>
-                </select>
-                <p id="voice-preview" class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">当前音色: 温柔女声</p>
+                <select id="voice-select" class="voice-select" onchange="changeVoice()"></select>
+                <p id="voice-preview" class="voice-preview">当前音色: 女声-轻柔</p>
             </div>
-        </div>
+        </section>
 
-        <!-- 数量选择区 -->
-        <div class="flex justify-center mb-8">
-            <div class="flex bg-gray-100 dark:bg-gray-700 p-1.5 rounded-2xl shadow-inner w-full max-w-[220px]">
-                <label class="radio-label flex-1 cursor-pointer">
-                    <input type="radio" name="diceCount" value="1" class="hidden" checked onchange="handleCountChange(event)">
-                    <div class="text-center py-3 rounded-xl text-gray-600 dark:text-gray-300 font-semibold transition-all duration-300">
-                        1 个骰子
-                    </div>
-                </label>
-                <label class="radio-label flex-1 cursor-pointer">
-                    <input type="radio" name="diceCount" value="2" class="hidden" onchange="handleCountChange(event)">
-                    <div class="text-center py-3 rounded-xl text-gray-600 dark:text-gray-300 font-semibold transition-all duration-300">
-                        2 个骰子
-                    </div>
-                </label>
-            </div>
-        </div>
+        <section class="count-switch" aria-label="骰子数量选择">
+            <label class="count-label">
+                <input type="radio" name="diceCount" value="1" checked onchange="handleCountChange(event)">
+                <div class="count-option">1 个骰子</div>
+            </label>
+            <label class="count-label">
+                <input type="radio" name="diceCount" value="2" onchange="handleCountChange(event)">
+                <div class="count-option">2 个骰子</div>
+            </label>
+        </section>
 
-        <!-- 骰子展示区 -->
-        <div class="flex justify-center items-center gap-8 min-h-[140px] mb-8 dice-container-3d" id="dice-container">
+        <section class="dice-container-3d" id="dice-container">
             <div id="dice1" class="dice"></div>
             <div id="dice2" class="dice hidden"></div>
-        </div>
+        </section>
 
-        <!-- 结果显示区 -->
-        <div class="text-center mb-8 h-12 flex items-center justify-center">
-            <div id="result-box" class="px-8 py-3 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-blue-800 transition-all duration-300">
-                <p id="result-text" class="text-2xl font-bold text-gray-700 dark:text-white">
-                    总计: 1 点
-                </p>
+        <section class="result-wrapper">
+            <div id="result-box" class="result-box">
+                <p id="result-text" class="result-text">总计: 1 点</p>
+            </div>
+        </section>
+
+        <button id="roll-button" class="roll-button" onclick="rollDice()">🎲 开始投掷</button>
+
+        <button id="stats-trigger" class="stats-trigger" onclick="toggleStatsModal(true)">投掷点数分布（点击查看）</button>
+    </main>
+
+    <div id="stats-modal" class="stats-modal" aria-hidden="true">
+        <div class="stats-card">
+            <div class="stats-header">
+                <h2>投掷点数分布统计</h2>
+                <button class="mini-btn" onclick="toggleStatsModal(false)">关闭</button>
+            </div>
+            <p id="stats-summary" class="stats-summary">暂无投掷数据，开始投掷后会自动统计。</p>
+            <div id="stats-chart" class="stats-chart"></div>
+            <div class="stats-actions">
+                <button class="mini-btn secondary" onclick="resetStats()">重置统计结果</button>
             </div>
         </div>
-
-        <!-- 操作按钮 -->
-        <button id="roll-button" onclick="rollDice()" class="btn-glow w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:scale-95 text-white font-bold text-xl py-4 rounded-2xl transition-all duration-200 shadow-xl shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2">
-            🎲 开始投掷
-        </button>
-
-        <!-- 统计信息 -->
-        <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-            <p>总投掷次数: <span id="total-rolls" class="font-bold text-blue-600 dark:text-blue-400">0</span></p>
-        </div>
-
     </div>
 
-    <!-- 逻辑脚本 -->
     <script>
-        // 状态管理
+        const voiceProfiles = [
+            {
+                label: "女声-轻柔",
+                gender: "female",
+                rate: 0.92,
+                pitch: 1.35,
+                volume: 1,
+                keywords: ["xiaoxiao", "tingting", "female", "siri"]
+            },
+            {
+                label: "女声-明亮",
+                gender: "female",
+                rate: 1.02,
+                pitch: 1.27,
+                volume: 1,
+                keywords: ["yaoyao", "xiao", "huihui", "he"]
+            },
+            {
+                label: "女声-甜美",
+                gender: "female",
+                rate: 1.1,
+                pitch: 1.42,
+                volume: 1,
+                keywords: ["xiaoyi", "ting", "sunhi", "hanna"]
+            },
+            {
+                label: "女声-清晰",
+                gender: "female",
+                rate: 0.98,
+                pitch: 1.2,
+                volume: 1,
+                keywords: ["hui", "mei", "luna", "female"]
+            },
+            {
+                label: "女声-沉稳",
+                gender: "female",
+                rate: 0.9,
+                pitch: 1.08,
+                volume: 1,
+                keywords: ["xiaorui", "xiaoqiu", "victoria", "wen"]
+            },
+            {
+                label: "男声-温润",
+                gender: "male",
+                rate: 0.93,
+                pitch: 0.95,
+                volume: 1,
+                keywords: ["kangkang", "yunxi", "male", "siri"]
+            },
+            {
+                label: "男声-磁性",
+                gender: "male",
+                rate: 0.88,
+                pitch: 0.82,
+                volume: 1,
+                keywords: ["kang", "junjie", "xiaobei", "david"]
+            },
+            {
+                label: "男声-清朗",
+                gender: "male",
+                rate: 1.02,
+                pitch: 0.98,
+                volume: 1,
+                keywords: ["yunyang", "yunjian", "tom", "alex"]
+            },
+            {
+                label: "男声-低沉",
+                gender: "male",
+                rate: 0.86,
+                pitch: 0.74,
+                volume: 1,
+                keywords: ["yunze", "sam", "lee", "male"]
+            },
+            {
+                label: "男声-播音",
+                gender: "male",
+                rate: 0.95,
+                pitch: 0.88,
+                volume: 1,
+                keywords: ["yunhao", "bo", "liam", "zhong"]
+            }
+        ];
+
         const state = {
             diceCount: 1,
             isRolling: false,
@@ -348,33 +946,101 @@
             shakePermissionGranted: false,
             soundEnabled: true,
             voiceEnabled: true,
-            totalRolls: 0,
             isDarkMode: false,
             lastShakeTime: 0,
-            selectedVoice: null,
-            availableVoices: []
+            selectedProfileIndex: 0,
+            availableVoices: [],
+            distribution: Array.from({ length: 13 }, () => 0),
+            rollingSoundTimer: null,
+            isFullscreen: false
         };
 
-        // DOM 元素
         const dom = {
-            dice1: document.getElementById('dice1'),
-            dice2: document.getElementById('dice2'),
-            resultText: document.getElementById('result-text'),
-            resultBox: document.getElementById('result-box'),
-            rollButton: document.getElementById('roll-button'),
-            soundIcon: document.getElementById('sound-icon'),
-            voiceIcon: document.getElementById('voice-icon'),
-            themeIcon: document.getElementById('theme-icon'),
-            totalRolls: document.getElementById('total-rolls'),
-            starsContainer: document.getElementById('stars-container'),
-            voicePanel: document.getElementById('voice-panel'),
-            voiceSelect: document.getElementById('voice-select'),
-            voicePreview: document.getElementById('voice-preview'),
-            voiceSettingsIcon: document.getElementById('voice-settings-icon')
+            dice1: document.getElementById("dice1"),
+            dice2: document.getElementById("dice2"),
+            resultText: document.getElementById("result-text"),
+            resultBox: document.getElementById("result-box"),
+            rollButton: document.getElementById("roll-button"),
+            soundIcon: document.getElementById("sound-icon"),
+            voiceIcon: document.getElementById("voice-icon"),
+            themeIcon: document.getElementById("theme-icon"),
+            fullscreenIcon: document.getElementById("fullscreen-icon"),
+            voiceSettingsIcon: document.getElementById("voice-settings-icon"),
+            voicePanel: document.getElementById("voice-panel"),
+            voiceSelect: document.getElementById("voice-select"),
+            voicePreview: document.getElementById("voice-preview"),
+            statsModal: document.getElementById("stats-modal"),
+            statsChart: document.getElementById("stats-chart"),
+            statsSummary: document.getElementById("stats-summary"),
+            starsContainer: document.getElementById("stars-container"),
+            soundButton: document.getElementById("sound-toggle"),
+            voiceButton: document.getElementById("voice-toggle"),
+            voiceSettingsButton: document.getElementById("voice-settings-toggle"),
+            themeButton: document.getElementById("theme-toggle"),
+            fullscreenButton: document.getElementById("fullscreen-toggle")
         };
 
-        // 使用 AudioContext 生成音效
+        const ICONS = {
+            soundOn: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.6 9H3v6h3.6L11 19V5Z"></path><path d="M15 9.5a4 4 0 0 1 0 5"></path><path d="M17.9 7a7.3 7.3 0 0 1 0 10"></path></svg>`,
+            soundOff: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.6 9H3v6h3.6L11 19V5Z"></path><path d="m15 9.5 4 5"></path><path d="m19 9.5-4 5"></path></svg>`,
+            voiceOn: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M6 11a6 6 0 0 0 12 0"></path><path d="M12 17v4"></path><path d="M9 21h6"></path></svg>`,
+            voiceOff: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="m4 4 16 16"></path><path d="M6 11a6 6 0 0 0 6 6"></path></svg>`,
+            settings: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11"></path><path d="M18 7h2"></path><circle cx="16" cy="7" r="2"></circle><path d="M4 17h4"></path><path d="M11 17h9"></path><circle cx="9" cy="17" r="2"></circle></svg>`,
+            moon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.2 8.2 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"></path></svg>`,
+            sun: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="m4.9 4.9 2.1 2.1"></path><path d="m17 17 2.1 2.1"></path><path d="M2 12h3"></path><path d="M19 12h3"></path><path d="m4.9 19.1 2.1-2.1"></path><path d="m17 7 2.1-2.1"></path></svg>`,
+            fullscreenEnter: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5"></path><path d="M16 3h5v5"></path><path d="M3 16v5h5"></path><path d="M21 16v5h-5"></path></svg>`,
+            fullscreenExit: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9H3V3"></path><path d="M15 9h6V3"></path><path d="M3 21v-6h6"></path><path d="M21 21v-6h-6"></path></svg>`
+        };
+
+        const diceFaces = {
+            1: ["dot-mc"],
+            2: ["dot-tl", "dot-br"],
+            3: ["dot-tl", "dot-mc", "dot-br"],
+            4: ["dot-tl", "dot-tr", "dot-bl", "dot-br"],
+            5: ["dot-tl", "dot-tr", "dot-mc", "dot-bl", "dot-br"],
+            6: ["dot-tl", "dot-tr", "dot-ml", "dot-mr", "dot-bl", "dot-br"]
+        };
+
         let audioContext = null;
+
+        function normalizeText(text) {
+            return String(text || "").toLowerCase();
+        }
+
+        function detectVoiceGender(voice) {
+            const text = normalizeText(`${voice.name} ${voice.lang}`);
+            if (/female|woman|girl|女|xiao|ting|yao|hui|mei/.test(text)) {
+                return "female";
+            }
+            if (/male|man|boy|男|kang|yun|lee|tom|david|alex|sam|liam/.test(text)) {
+                return "male";
+            }
+            return null;
+        }
+
+        function chooseVoiceForProfile(profile, pool, usedNames) {
+            if (!pool.length) return null;
+
+            const profileKeywords = profile.keywords.map(normalizeText);
+            let picked = pool.find((voice) => {
+                const voiceText = normalizeText(`${voice.name} ${voice.lang}`);
+                return profileKeywords.some((keyword) => voiceText.includes(keyword)) && !usedNames.has(voice.name);
+            });
+
+            if (!picked) {
+                picked = pool.find((voice) => detectVoiceGender(voice) === profile.gender && !usedNames.has(voice.name));
+            }
+
+            if (!picked) {
+                picked = pool.find((voice) => !usedNames.has(voice.name));
+            }
+
+            if (!picked) {
+                picked = pool[0];
+            }
+
+            return picked;
+        }
 
         function initAudioContext() {
             if (!audioContext) {
@@ -383,311 +1049,263 @@
             return audioContext;
         }
 
-        // 摇骰子音效 - 使用 Web Audio API 生成
-        function playRollSound() {
+        function playRollChunk() {
             if (!state.soundEnabled) return;
-            
             try {
                 const ctx = initAudioContext();
                 const now = ctx.currentTime;
-                
-                // 创建多个短促的撞击声
-                for (let i = 0; i < 8; i++) {
-                    const oscillator = ctx.createOscillator();
-                    const gainNode = ctx.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(ctx.destination);
-                    
-                    oscillator.frequency.value = 150 + Math.random() * 100;
-                    oscillator.type = 'square';
-                    
-                    const startTime = now + i * 0.08;
-                    gainNode.gain.setValueAtTime(0.3, startTime);
-                    gainNode.gain.exponentialDecayTo = 0.01;
-                    gainNode.gain.setValueAtTime(0.3, startTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
-                    
-                    oscillator.start(startTime);
-                    oscillator.stop(startTime + 0.1);
-                }
-            } catch (e) {
-                console.log("音效播放失败", e);
-            }
-        }
-
-        // 成功音效
-        function playSuccessSound() {
-            if (!state.soundEnabled) return;
-            
-            try {
-                const ctx = initAudioContext();
-                const now = ctx.currentTime;
-                
-                // 创建成功音效
                 const oscillator = ctx.createOscillator();
+                const filter = ctx.createBiquadFilter();
                 const gainNode = ctx.createGain();
-                
-                oscillator.connect(gainNode);
+
+                oscillator.type = "triangle";
+                oscillator.frequency.setValueAtTime(120 + Math.random() * 90, now);
+                oscillator.frequency.exponentialRampToValueAtTime(70 + Math.random() * 60, now + 0.08);
+
+                filter.type = "bandpass";
+                filter.frequency.setValueAtTime(550 + Math.random() * 700, now);
+                filter.Q.value = 6;
+
+                gainNode.gain.setValueAtTime(0.0001, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.16, now + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+                oscillator.connect(filter);
+                filter.connect(gainNode);
                 gainNode.connect(ctx.destination);
-                
-                oscillator.frequency.setValueAtTime(523.25, now); // C5
-                oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
-                
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0, now);
-                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                
+
                 oscillator.start(now);
-                oscillator.stop(now + 0.4);
-            } catch (e) {
-                console.log("成功音效播放失败", e);
+                oscillator.stop(now + 0.08);
+            } catch (error) {
+                console.log("滚动音效播放失败", error);
             }
         }
 
-        // 加载可用语音
-        function loadVoices() {
-            if ('speechSynthesis' in window) {
-                const voices = speechSynthesis.getVoices();
-                state.availableVoices = voices.filter(v => v.lang.includes('zh') || v.lang.includes('CN'));
-                
-                // 如果没有中文语音，使用所有语音
-                if (state.availableVoices.length === 0) {
-                    state.availableVoices = voices;
-                }
-                
-                // 选择温柔女声（优先选择中英文混合的女声）
-                let defaultVoice = state.availableVoices.find(v => 
-                    v.name.includes('Ting') || 
-                    v.name.includes('Kang') ||
-                    v.name.includes('Kangkang') ||
-                    v.name.includes('Xiaoxiao') ||
-                    v.name.includes('Yaoyao') ||
-                    (v.name.toLowerCase().includes('female') && v.lang.includes('zh'))
-                );
-                
-                // 如果没有找到特定的温柔女声，选择第一个中文语音
-                if (!defaultVoice && state.availableVoices.length > 0) {
-                    defaultVoice = state.availableVoices[0];
-                }
-                
-                state.selectedVoice = defaultVoice;
-                updateVoiceSelect();
-                updateVoicePreview();
+        function startRollingSound() {
+            if (!state.soundEnabled || state.rollingSoundTimer) return;
+            playRollChunk();
+            state.rollingSoundTimer = window.setInterval(playRollChunk, 78);
+        }
+
+        function stopRollingSound() {
+            if (state.rollingSoundTimer) {
+                clearInterval(state.rollingSoundTimer);
+                state.rollingSoundTimer = null;
             }
         }
 
-        // 更新语音选择下拉框
-        function updateVoiceSelect() {
-            dom.voiceSelect.innerHTML = '';
-            
-            if (state.availableVoices.length === 0) {
-                const option = document.createElement('option');
-                option.text = '暂无可用语音';
-                dom.voiceSelect.add(option);
-                return;
-            }
-            
-            state.availableVoices.forEach((voice, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.text = `${voice.name} (${voice.lang})`;
-                if (state.selectedVoice && voice.name === state.selectedVoice.name) {
-                    option.selected = true;
-                }
-                dom.voiceSelect.add(option);
-            });
-        }
-
-        // 更新语音预览文本
-        function updateVoicePreview() {
-            if (state.selectedVoice) {
-                const voiceName = state.selectedVoice.name;
-                if (voiceName.includes('Ting') || voiceName.includes('Yaoyao')) {
-                    dom.voicePreview.textContent = '当前音色: 温柔女声';
-                } else if (voiceName.includes('Kang') || voiceName.includes('Kangkang')) {
-                    dom.voicePreview.textContent = '当前音色: 温柔男声';
-                } else {
-                    dom.voicePreview.textContent = `当前音色: ${voiceName}`;
-                }
-            } else {
-                dom.voicePreview.textContent = '当前音色: 默认';
-            }
-        }
-
-        // 切换语音面板
-        window.toggleVoicePanel = function() {
-            dom.voicePanel.classList.toggle('open');
-            dom.voiceSettingsIcon.textContent = dom.voicePanel.classList.contains('open') ? '✖️' : '⚙️';
-        }
-
-        // 更改语音
-        window.changeVoice = function() {
-            const index = dom.voiceSelect.value;
-            if (index !== '') {
-                state.selectedVoice = state.availableVoices[parseInt(index)];
-                updateVoicePreview();
-                testVoice();
-            }
-        }
-
-        // 试听语音
-        window.testVoice = function() {
-            speakText('你好，这是语音测试');
-        }
-
-        // 中文语音播报
-        function speakText(text) {
-            if (!state.voiceEnabled) return;
-            
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-CN';
-                utterance.rate = 1;
-                utterance.pitch = 1;
-                utterance.volume = 1;
-                
-                if (state.selectedVoice) {
-                    utterance.voice = state.selectedVoice;
-                }
-                
-                window.speechSynthesis.speak(utterance);
-            } else {
-                console.log("浏览器不支持语音合成");
-            }
-        }
-
-        // 骰子点数配置
-        const diceFaces = {
-            1: ['dot-mc'],
-            2: ['dot-tl', 'dot-br'],
-            3: ['dot-tl', 'dot-mc', 'dot-br'],
-            4: ['dot-tl', 'dot-tr', 'dot-bl', 'dot-br'],
-            5: ['dot-tl', 'dot-tr', 'dot-mc', 'dot-bl', 'dot-br'],
-            6: ['dot-tl', 'dot-tr', 'dot-ml', 'dot-mr', 'dot-bl', 'dot-br']
-        };
-
-        // 创建星星背景
         function createStars() {
-            for (let i = 0; i < 50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 3 + 's';
+            for (let i = 0; i < 52; i += 1) {
+                const star = document.createElement("div");
+                star.className = "star";
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 3.4}s`;
                 dom.starsContainer.appendChild(star);
             }
         }
 
-        // 渲染骰子
         function renderDiceEl(diceEl, value) {
-            diceEl.innerHTML = '';
-            const classes = diceFaces[value];
-            classes.forEach(cls => {
-                const dot = document.createElement('div');
+            diceEl.innerHTML = "";
+            diceFaces[value].forEach((cls) => {
+                const dot = document.createElement("div");
                 dot.className = `dot ${cls}`;
                 diceEl.appendChild(dot);
             });
         }
 
-        // 刷新UI
         function refreshUI() {
             renderDiceEl(dom.dice1, state.dice1Value);
 
             if (state.diceCount === 2) {
-                dom.dice2.classList.remove('hidden');
+                dom.dice2.classList.remove("hidden");
                 renderDiceEl(dom.dice2, state.dice2Value);
             } else {
-                dom.dice2.classList.add('hidden');
+                dom.dice2.classList.add("hidden");
             }
 
-            if (!state.isRolling) {
+            if (state.isRolling) {
+                dom.resultText.textContent = "投掷中...";
+                dom.rollButton.disabled = true;
+                dom.rollButton.textContent = "🔄 骰子滚动中...";
+            } else {
                 const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
                 dom.resultText.textContent = `总计: ${total} 点`;
                 dom.rollButton.disabled = false;
-                dom.rollButton.innerHTML = '🎲 开始投掷';
-                
-                // 结果颜色
-                dom.resultBox.style.borderColor = total <= 3 ? '#f87171' : total <= 6 ? '#fbbf24' : '#34d399';
-            } else {
-                dom.resultText.textContent = '投掷中...';
-                dom.rollButton.disabled = true;
-                dom.rollButton.innerHTML = '🔄 滚动中...';
+                dom.rollButton.textContent = "🎲 开始投掷";
+                dom.resultBox.style.borderColor = total <= 3 ? "#f87171" : total <= 7 ? "#fbbf24" : "#34d399";
             }
         }
 
-        // 切换音效
-        window.toggleSound = function() {
-            state.soundEnabled = !state.soundEnabled;
-            dom.soundIcon.textContent = state.soundEnabled ? '🔊' : '🔇';
+        function getCurrentProfile() {
+            return voiceProfiles[state.selectedProfileIndex] || voiceProfiles[0];
         }
 
-        // 切换语音
-        window.toggleVoice = function() {
-            state.voiceEnabled = !state.voiceEnabled;
-            dom.voiceIcon.textContent = state.voiceEnabled ? '🗣️' : '🔇';
-            
-            if (!state.voiceEnabled) {
-                window.speechSynthesis.cancel();
+        function updateVoiceSelect() {
+            dom.voiceSelect.innerHTML = "";
+            voiceProfiles.forEach((profile, index) => {
+                const option = document.createElement("option");
+                option.value = String(index);
+                option.textContent = `${profile.label}${profile.voice ? ` (${profile.voice.name})` : ""}`;
+                if (index === state.selectedProfileIndex) {
+                    option.selected = true;
+                }
+                dom.voiceSelect.appendChild(option);
+            });
+        }
+
+        function updateVoicePreview() {
+            const profile = getCurrentProfile();
+            const voiceName = profile.voice ? ` / ${profile.voice.name}` : "";
+            dom.voicePreview.textContent = `当前音色: ${profile.label}${voiceName}`;
+        }
+
+        function loadVoices() {
+            if (!("speechSynthesis" in window)) {
+                updateVoiceSelect();
+                updateVoicePreview();
+                return;
             }
+
+            const allVoices = speechSynthesis.getVoices();
+            state.availableVoices = allVoices;
+
+            const zhVoices = allVoices.filter((voice) => {
+                const text = normalizeText(`${voice.lang} ${voice.name}`);
+                return /zh|cmn|yue|chinese|中文/.test(text);
+            });
+
+            const pool = zhVoices.length ? zhVoices : allVoices;
+            const usedNames = new Set();
+
+            voiceProfiles.forEach((profile) => {
+                profile.voice = chooseVoiceForProfile(profile, pool, usedNames);
+                if (profile.voice) {
+                    usedNames.add(profile.voice.name);
+                }
+            });
+
+            updateVoiceSelect();
+            updateVoicePreview();
         }
 
-        // 切换主题
-        window.toggleTheme = function() {
-            state.isDarkMode = !state.isDarkMode;
-            document.body.classList.toggle('dark-mode', state.isDarkMode);
-            dom.themeIcon.textContent = state.isDarkMode ? '☀️' : '🌙';
+        function speakText(text) {
+            if (!state.voiceEnabled || !("speechSynthesis" in window)) return;
+
+            window.speechSynthesis.cancel();
+            const profile = getCurrentProfile();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = "zh-CN";
+            utterance.rate = profile.rate;
+            utterance.pitch = profile.pitch;
+            utterance.volume = profile.volume;
+
+            if (profile.voice) {
+                utterance.voice = profile.voice;
+            }
+
+            window.speechSynthesis.speak(utterance);
         }
 
-        // 申请摇晃权限
+        function refreshControls() {
+            dom.soundIcon.innerHTML = state.soundEnabled ? ICONS.soundOn : ICONS.soundOff;
+            dom.voiceIcon.innerHTML = state.voiceEnabled ? ICONS.voiceOn : ICONS.voiceOff;
+            dom.voiceSettingsIcon.innerHTML = ICONS.settings;
+            dom.themeIcon.innerHTML = state.isDarkMode ? ICONS.sun : ICONS.moon;
+            dom.fullscreenIcon.innerHTML = state.isFullscreen ? ICONS.fullscreenExit : ICONS.fullscreenEnter;
+
+            dom.soundButton.classList.toggle("is-active", state.soundEnabled);
+            dom.voiceButton.classList.toggle("is-active", state.voiceEnabled);
+            dom.voiceSettingsButton.classList.toggle("is-active", dom.voicePanel.classList.contains("open"));
+            dom.themeButton.classList.toggle("is-active", state.isDarkMode);
+            dom.fullscreenButton.classList.toggle("is-active", state.isFullscreen);
+        }
+
+        function getTotalSamples() {
+            return state.distribution.reduce((sum, value) => sum + value, 0);
+        }
+
+        function renderStatsChart() {
+            const values = state.distribution.slice(1);
+            const maxCount = Math.max(1, ...values);
+            dom.statsChart.innerHTML = "";
+
+            for (let point = 1; point <= 12; point += 1) {
+                const count = state.distribution[point];
+                const ratio = count / maxCount;
+                const barHeight = count === 0 ? 4 : Math.max(12, ratio * 100);
+
+                const item = document.createElement("div");
+                item.className = "stat-item";
+                item.innerHTML = `
+                    <span class="stat-count">${count}</span>
+                    <div class="stat-track">
+                        <div class="stat-bar" style="height: ${barHeight}%"></div>
+                    </div>
+                    <span class="stat-label">${point}</span>
+                `;
+                dom.statsChart.appendChild(item);
+            }
+
+            const totalSamples = getTotalSamples();
+            dom.statsSummary.textContent = totalSamples > 0
+                ? `已记录 ${totalSamples} 次投掷结果，点击下方可重置。`
+                : "暂无投掷数据，开始投掷后会自动统计。";
+        }
+
+        function addDistribution(total) {
+            if (total >= 1 && total <= 12) {
+                state.distribution[total] += 1;
+            }
+            renderStatsChart();
+        }
+
         function requestShakePermission() {
             if (state.shakePermissionGranted) return;
 
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
                 DeviceMotionEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('devicemotion', handleMotion);
+                    .then((permissionState) => {
+                        if (permissionState === "granted") {
+                            window.addEventListener("devicemotion", handleMotion);
                             state.shakePermissionGranted = true;
                         }
                     })
-                    .catch(console.error);
+                    .catch((error) => {
+                        console.log("摇动权限申请失败", error);
+                    });
             } else {
-                window.addEventListener('devicemotion', handleMotion);
+                window.addEventListener("devicemotion", handleMotion);
                 state.shakePermissionGranted = true;
             }
         }
 
-        // 摇晃检测
-        let lastX, lastY, lastZ;
-        const SHAKE_THRESHOLD = 15;
-        const SHAKE_COOLDOWN = 2000; // 2秒冷却时间
+        let lastX;
+        let lastY;
+        let lastZ;
 
-        function handleMotion(e) {
-            const currentTime = Date.now();
-            
-            // 检查冷却时间
-            if (currentTime - state.lastShakeTime < SHAKE_COOLDOWN) {
+        const SHAKE_THRESHOLD = 16;
+        const SHAKE_COOLDOWN = 2000;
+
+        function handleMotion(event) {
+            const now = Date.now();
+
+            if (state.isRolling || now - state.lastShakeTime < SHAKE_COOLDOWN) {
                 return;
             }
-            
-            if (state.isRolling) return;
 
-            const current = e.accelerationIncludingGravity;
-            if (!current) return;
+            const current = event.accelerationIncludingGravity;
+            if (!current) {
+                return;
+            }
 
-            if (lastX !== undefined) {
+            if (lastX !== undefined && lastY !== undefined && lastZ !== undefined) {
                 const deltaX = Math.abs(current.x - lastX);
                 const deltaY = Math.abs(current.y - lastY);
                 const deltaZ = Math.abs(current.z - lastZ);
 
                 if (deltaX + deltaY + deltaZ > SHAKE_THRESHOLD) {
-                    state.lastShakeTime = currentTime;
+                    state.lastShakeTime = now;
                     rollDice();
                 }
             }
@@ -697,72 +1315,160 @@
             lastZ = current.z;
         }
 
-        // 切换骰子数量
-        window.handleCountChange = function(e) {
+        window.toggleSound = function () {
+            state.soundEnabled = !state.soundEnabled;
+            if (!state.soundEnabled) {
+                stopRollingSound();
+            }
+            refreshControls();
+        };
+
+        window.toggleVoice = function () {
+            state.voiceEnabled = !state.voiceEnabled;
+            if (!state.voiceEnabled && "speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+            refreshControls();
+        };
+
+        window.toggleVoicePanel = function () {
+            dom.voicePanel.classList.toggle("open");
+            refreshControls();
+        };
+
+        window.changeVoice = function () {
+            const index = Number(dom.voiceSelect.value);
+            if (Number.isInteger(index) && index >= 0 && index < voiceProfiles.length) {
+                state.selectedProfileIndex = index;
+                updateVoicePreview();
+            }
+        };
+
+        window.testVoice = function () {
+            const profile = getCurrentProfile();
+            speakText(`你好，我是${profile.label}，现在进行语音测试。`);
+        };
+
+        window.toggleTheme = function () {
+            state.isDarkMode = !state.isDarkMode;
+            document.body.classList.toggle("dark-mode", state.isDarkMode);
+            refreshControls();
+        };
+
+        window.toggleFullscreen = async function () {
+            try {
+                if (!document.fullscreenElement) {
+                    if (document.documentElement.requestFullscreen) {
+                        await document.documentElement.requestFullscreen();
+                    }
+                } else if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                }
+            } catch (error) {
+                console.log("全屏模式不可用", error);
+            } finally {
+                state.isFullscreen = Boolean(document.fullscreenElement);
+                refreshControls();
+            }
+        };
+
+        window.handleCountChange = function (event) {
             if (state.isRolling) return;
-            state.diceCount = parseInt(e.target.value);
+            state.diceCount = Number(event.target.value);
             state.dice1Value = Math.floor(Math.random() * 6) + 1;
             state.dice2Value = Math.floor(Math.random() * 6) + 1;
             refreshUI();
-            playRollSound();
-        }
+        };
 
-        // 投掷骰子
-        window.rollDice = function() {
+        window.toggleStatsModal = function (open) {
+            const shouldOpen = typeof open === "boolean" ? open : !dom.statsModal.classList.contains("open");
+            dom.statsModal.classList.toggle("open", shouldOpen);
+            dom.statsModal.setAttribute("aria-hidden", String(!shouldOpen));
+            if (shouldOpen) {
+                renderStatsChart();
+            }
+        };
+
+        window.resetStats = function () {
+            state.distribution.fill(0);
+            renderStatsChart();
+        };
+
+        window.rollDice = function () {
             if (state.isRolling) return;
 
             requestShakePermission();
-            playRollSound();
-
             state.isRolling = true;
-            state.totalRolls++;
             state.lastShakeTime = Date.now();
-            dom.totalRolls.textContent = state.totalRolls;
             refreshUI();
 
-            dom.dice1.classList.add('shake');
-            if (state.diceCount === 2) dom.dice2.classList.add('shake');
+            startRollingSound();
 
-            const rollDuration = 600;
-            const intervalTime = 80;
+            dom.dice1.classList.add("shake");
+            if (state.diceCount === 2) {
+                dom.dice2.classList.add("shake");
+            }
 
-            let rollInterval = setInterval(() => {
+            const rollDuration = 820;
+            const frameInterval = 72;
+
+            const randomizeFace = () => {
                 state.dice1Value = Math.floor(Math.random() * 6) + 1;
                 state.dice2Value = Math.floor(Math.random() * 6) + 1;
                 renderDiceEl(dom.dice1, state.dice1Value);
-                if (state.diceCount === 2) renderDiceEl(dom.dice2, state.dice2Value);
-            }, intervalTime);
+                if (state.diceCount === 2) {
+                    renderDiceEl(dom.dice2, state.dice2Value);
+                }
+            };
+
+            randomizeFace();
+            const rollTimer = setInterval(randomizeFace, frameInterval);
 
             setTimeout(() => {
-                clearInterval(rollInterval);
-                dom.dice1.classList.remove('shake');
-                dom.dice2.classList.remove('shake');
+                clearInterval(rollTimer);
+                dom.dice1.classList.remove("shake");
+                dom.dice2.classList.remove("shake");
 
                 state.dice1Value = Math.floor(Math.random() * 6) + 1;
                 state.dice2Value = Math.floor(Math.random() * 6) + 1;
 
-                state.isRolling = false;
-                
-                // 添加弹跳动画
-                dom.resultBox.classList.add('bounce-in');
-                setTimeout(() => dom.resultBox.classList.remove('bounce-in'), 500);
-                
-                refreshUI();
-                playSuccessSound();
-                
-                // 中文语音播报结果
                 const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
-                speakText(`${total}点`);
+                addDistribution(total);
+
+                stopRollingSound();
+                state.isRolling = false;
+                refreshUI();
+
+                dom.resultBox.classList.add("bounce-in");
+                setTimeout(() => dom.resultBox.classList.remove("bounce-in"), 500);
+
+                setTimeout(() => {
+                    speakText(`总计${total}点`);
+                }, 80);
             }, rollDuration);
+        };
+
+        dom.statsModal.addEventListener("click", (event) => {
+            if (event.target === dom.statsModal) {
+                toggleStatsModal(false);
+            }
+        });
+
+        document.addEventListener("fullscreenchange", () => {
+            state.isFullscreen = Boolean(document.fullscreenElement);
+            refreshControls();
+        });
+
+        if ("speechSynthesis" in window) {
+            speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        // 初始化
-        if ('speechSynthesis' in window) {
-            speechSynthesis.onvoiceschanged = loadVoices;
-            loadVoices();
-        }
-        
         createStars();
+        updateVoiceSelect();
+        updateVoicePreview();
+        loadVoices();
+        renderStatsChart();
+        refreshControls();
         refreshUI();
     </script>
 </body>
