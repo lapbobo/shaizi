@@ -136,7 +136,7 @@
 
         .app-title {
             margin: 0;
-            font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+            font-size: clamp(1.55rem, 3vw, 1.95rem);
             line-height: 1.05;
             font-weight: 900;
             letter-spacing: 0.03em;
@@ -155,9 +155,9 @@
         }
 
         .icon-btn {
-            width: 1.35rem;
-            height: 1.35rem;
-            border-radius: 0.45rem;
+            width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 0.5rem;
             border: 1px solid rgba(148, 163, 184, 0.25);
             background: rgba(248, 250, 252, 0.75);
             display: inline-flex;
@@ -208,8 +208,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 0.75rem;
-            height: 0.75rem;
+            width: 1.1rem;
+            height: 1.1rem;
         }
 
         .icon-slot svg {
@@ -290,8 +290,8 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            padding: 10%;
-            gap: 6%;
+            padding: clamp(12%, 2.5vw, 14%);
+            gap: clamp(5%, 1.5vw, 6%);
             transform-style: preserve-3d;
             transform: perspective(1000px) rotateX(5deg) rotateY(-5deg);
         }
@@ -686,18 +686,18 @@
             }
 
             .app-title {
-                font-size: 1.32rem;
+                font-size: 1.55rem;
             }
 
             .icon-btn {
-                width: 1.25rem;
-                height: 1.25rem;
-                border-radius: 0.4rem;
+                width: 1.8rem;
+                height: 1.8rem;
+                border-radius: 0.48rem;
             }
 
             .icon-slot {
-                width: 0.7rem;
-                height: 0.7rem;
+                width: 1.05rem;
+                height: 1.05rem;
             }
 
             .dice-container-3d {
@@ -774,7 +774,7 @@
             </div>
         </section>
 
-        <button id="roll-button" class="roll-button" onclick="rollDice()">🎲 开始投掷</button>
+        <button id="roll-button" class="roll-button" onclick="rollDice()">开始投掷</button>
 
         <button id="stats-trigger" class="stats-trigger" onclick="toggleStatsModal(true)">统计分布</button>
     </main>
