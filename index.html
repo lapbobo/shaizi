@@ -233,6 +233,10 @@
                 <button id="sound-toggle" onclick="toggleSound()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="音效开关">
                     <span id="sound-icon" class="text-xl">🔊</span>
                 </button>
+                <!-- 语音开关 -->
+                <button id="voice-toggle" onclick="toggleVoice()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="语音播报">
+                    <span id="voice-icon" class="text-xl">🗣️</span>
+                </button>
                 <!-- 暗黑模式开关 -->
                 <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="切换主题">
                     <span id="theme-icon" class="text-xl">🌙</span>
@@ -295,6 +299,7 @@
             dice2Value: 1,
             shakePermissionGranted: false,
             soundEnabled: true,
+            voiceEnabled: true,
             totalRolls: 0,
             isDarkMode: false
         };
@@ -307,22 +312,105 @@
             resultBox: document.getElementById('result-box'),
             rollButton: document.getElementById('roll-button'),
             soundIcon: document.getElementById('sound-icon'),
+            voiceIcon: document.getElementById('voice-icon'),
             themeIcon: document.getElementById('theme-icon'),
             totalRolls: document.getElementById('total-rolls'),
             starsContainer: document.getElementById('stars-container')
         };
 
-        // 音频对象
-        const rollSound = new Audio('https://freesound.org/data/previews/274/274183_4284968-lq.mp3');
-        rollSound.preload = 'auto';
+        // 使用 AudioContext 生成音效
+        let audioContext = null;
 
-        // 结果音效
-        const resultSounds = {
-            low: new Audio('https://freesound.org/data/previews/321/321947_5180442-lq.mp3'),
-            medium: new Audio('https://freesound.org/data/previews/428/428706_8910638-lq.mp3'),
-            high: new Audio('https://freesound.org/data/previews/396/396908_5020555-lq.mp3')
-        };
-        Object.values(resultSounds).forEach(sound => sound.preload = 'auto');
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // 摇骰子音效 - 使用 Web Audio API 生成
+        function playRollSound() {
+            if (!state.soundEnabled) return;
+            
+            try {
+                const ctx = initAudioContext();
+                const now = ctx.currentTime;
+                
+                // 创建多个短促的撞击声
+                for (let i = 0; i < 8; i++) {
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    oscillator.frequency.value = 150 + Math.random() * 100;
+                    oscillator.type = 'square';
+                    
+                    const startTime = now + i * 0.08;
+                    gainNode.gain.setValueAtTime(0.3, startTime);
+                    gainNode.gain.exponentialDecayTo = 0.01;
+                    gainNode.gain.setValueAtTime(0.3, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
+                    
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.1);
+                }
+            } catch (e) {
+                console.log("音效播放失败", e);
+            }
+        }
+
+        // 成功音效
+        function playSuccessSound() {
+            if (!state.soundEnabled) return;
+            
+            try {
+                const ctx = initAudioContext();
+                const now = ctx.currentTime;
+                
+                // 创建成功音效
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                oscillator.frequency.setValueAtTime(523.25, now); // C5
+                oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                
+                oscillator.start(now);
+                oscillator.stop(now + 0.4);
+            } catch (e) {
+                console.log("成功音效播放失败", e);
+            }
+        }
+
+        // 中文语音播报
+        function speakText(text) {
+            if (!state.voiceEnabled) return;
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.log("浏览器不支持语音合成");
+            }
+        }
 
         // 骰子点数配置
         const diceFaces = {
@@ -383,29 +471,20 @@
             }
         }
 
-        // 播放音效
-        function playSound(type = 'roll') {
-            if (!state.soundEnabled) return;
-
-            try {
-                if (type === 'roll') {
-                    rollSound.currentTime = 0;
-                    rollSound.play();
-                } else if (type === 'result') {
-                    const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
-                    const sound = total <= 4 ? resultSounds.low : total <= 8 ? resultSounds.medium : resultSounds.high;
-                    sound.currentTime = 0;
-                    sound.play();
-                }
-            } catch (e) {
-                console.log("音效播放失败", e);
-            }
-        }
-
         // 切换音效
         window.toggleSound = function() {
             state.soundEnabled = !state.soundEnabled;
             dom.soundIcon.textContent = state.soundEnabled ? '🔊' : '🔇';
+        }
+
+        // 切换语音
+        window.toggleVoice = function() {
+            state.voiceEnabled = !state.voiceEnabled;
+            dom.voiceIcon.textContent = state.voiceEnabled ? '🗣️' : '🔇';
+            
+            if (!state.voiceEnabled) {
+                window.speechSynthesis.cancel();
+            }
         }
 
         // 切换主题
@@ -466,7 +545,7 @@
             state.dice1Value = Math.floor(Math.random() * 6) + 1;
             state.dice2Value = Math.floor(Math.random() * 6) + 1;
             refreshUI();
-            playSound('roll');
+            playRollSound();
         }
 
         // 投掷骰子
@@ -474,7 +553,7 @@
             if (state.isRolling) return;
 
             requestShakePermission();
-            playSound('roll');
+            playRollSound();
 
             state.isRolling = true;
             state.totalRolls++;
@@ -509,7 +588,11 @@
                 setTimeout(() => dom.resultBox.classList.remove('bounce-in'), 500);
                 
                 refreshUI();
-                playSound('result');
+                playSuccessSound();
+                
+                // 中文语音播报结果
+                const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
+                speakText(`${total}点`);
             }, rollDuration);
         }
 
