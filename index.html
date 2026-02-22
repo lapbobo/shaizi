@@ -112,6 +112,13 @@
             overflow: hidden;
         }
 
+        .header-wrapper {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+        }
+
         .dark-mode .app-shell {
             background: var(--glass-dark);
             border-color: rgba(148, 163, 184, 0.25);
@@ -124,6 +131,7 @@
             justify-content: center;
             min-height: 2.25rem;
             text-align: center;
+            flex: 1;
         }
 
         .app-title {
@@ -148,29 +156,29 @@
         }
 
         .control-bar {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 0.45rem;
+            display: flex;
+            gap: 0.18rem;
         }
 
         .icon-btn {
-            height: 2.35rem;
-            width: 100%;
-            border-radius: 0.9rem;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-            background: rgba(248, 250, 252, 0.85);
+            width: 1.35rem;
+            height: 1.35rem;
+            border-radius: 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(248, 250, 252, 0.75);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            color: #334155;
+            color: #64748b;
             padding: 0;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
         }
 
         .icon-btn:hover {
-            transform: translateY(-1px);
-            border-color: rgba(37, 99, 235, 0.42);
+            transform: translateY(-0.5px);
+            border-color: rgba(37, 99, 235, 0.35);
+            color: #475569;
         }
 
         .icon-btn:active {
@@ -178,35 +186,36 @@
         }
 
         .icon-btn.is-active {
-            border-color: rgba(37, 99, 235, 0.62);
-            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.22);
-            color: #1d4ed8;
-            background: rgba(219, 234, 254, 0.9);
+            border-color: rgba(37, 99, 235, 0.5);
+            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.15);
+            color: #2563eb;
+            background: rgba(219, 234, 254, 0.85);
         }
 
         .dark-mode .icon-btn {
-            border-color: rgba(148, 163, 184, 0.3);
-            background: rgba(30, 41, 59, 0.82);
-            color: #e2e8f0;
-            box-shadow: 0 4px 12px rgba(2, 6, 23, 0.35);
+            border-color: rgba(148, 163, 184, 0.2);
+            background: rgba(30, 41, 59, 0.7);
+            color: #94a3b8;
+            box-shadow: 0 2px 6px rgba(2, 6, 23, 0.2);
         }
 
         .dark-mode .icon-btn:hover {
-            border-color: rgba(96, 165, 250, 0.7);
+            border-color: rgba(96, 165, 250, 0.5);
+            color: #cbd5e1;
         }
 
         .dark-mode .icon-btn.is-active {
-            background: rgba(30, 64, 175, 0.36);
-            color: #bfdbfe;
-            border-color: rgba(96, 165, 250, 0.8);
+            background: rgba(30, 64, 175, 0.3);
+            color: #93c5fd;
+            border-color: rgba(96, 165, 250, 0.6);
         }
 
         .icon-slot {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 1.1rem;
-            height: 1.1rem;
+            width: 0.75rem;
+            height: 0.75rem;
         }
 
         .icon-slot svg {
@@ -401,16 +410,10 @@
         .result-box {
             min-width: 66%;
             text-align: center;
-            border-radius: 1rem;
-            border: 2px solid rgba(37, 99, 235, 0.34);
-            background: rgba(239, 246, 255, 0.78);
-            padding: 0.55rem 0.85rem;
-            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.13);
+            padding: 0;
         }
 
         .dark-mode .result-box {
-            background: rgba(30, 64, 175, 0.2);
-            border-color: rgba(96, 165, 250, 0.5);
         }
 
         .result-text {
@@ -419,10 +422,27 @@
             font-weight: 900;
             letter-spacing: 0.02em;
             color: #1f2937;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.15rem;
+        }
+
+        .result-number {
+            font-size: inherit;
+        }
+
+        .result-suffix {
+            font-size: 0.7em;
+            font-weight: 700;
+            color: #64748b;
         }
 
         .dark-mode .result-text {
             color: #f8fafc;
+        }
+
+        .dark-mode .result-suffix {
+            color: #94a3b8;
         }
 
         .roll-button {
@@ -661,8 +681,14 @@
             }
 
             .icon-btn {
-                height: 2.2rem;
-                border-radius: 0.78rem;
+                width: 1.25rem;
+                height: 1.25rem;
+                border-radius: 0.4rem;
+            }
+
+            .icon-slot {
+                width: 0.7rem;
+                height: 0.7rem;
             }
 
             .dice-container-3d {
@@ -696,24 +722,26 @@
     <div id="stars-container"></div>
 
     <main class="app-shell" id="app-shell">
-        <header class="app-header">
-            <h1 class="app-title"><span class="title-dice">🎲</span>幸运掷骰子</h1>
-        </header>
+        <div class="header-wrapper">
+            <header class="app-header">
+                <h1 class="app-title"><span class="title-dice">🎲</span>幸运掷骰子</h1>
+            </header>
 
-        <section class="control-bar">
-            <button id="sound-toggle" class="icon-btn" onclick="toggleSound()" title="音效开关" aria-label="音效开关">
-                <span id="sound-icon" class="icon-slot"></span>
-            </button>
-            <button id="voice-toggle" class="icon-btn" onclick="toggleVoice()" title="语音播报开关" aria-label="语音播报开关">
-                <span id="voice-icon" class="icon-slot"></span>
-            </button>
-            <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()" title="浅色或深色模式" aria-label="浅色或深色模式">
-                <span id="theme-icon" class="icon-slot"></span>
-            </button>
-            <button id="fullscreen-toggle" class="icon-btn" onclick="toggleFullscreen()" title="全屏显示或退出" aria-label="全屏显示或退出">
-                <span id="fullscreen-icon" class="icon-slot"></span>
-            </button>
-        </section>
+            <section class="control-bar">
+                <button id="sound-toggle" class="icon-btn" onclick="toggleSound()" title="音效开关" aria-label="音效开关">
+                    <span id="sound-icon" class="icon-slot"></span>
+                </button>
+                <button id="voice-toggle" class="icon-btn" onclick="toggleVoice()" title="语音播报开关" aria-label="语音播报开关">
+                    <span id="voice-icon" class="icon-slot"></span>
+                </button>
+                <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()" title="浅色或深色模式" aria-label="浅色或深色模式">
+                    <span id="theme-icon" class="icon-slot"></span>
+                </button>
+                <button id="fullscreen-toggle" class="icon-btn" onclick="toggleFullscreen()" title="全屏显示或退出" aria-label="全屏显示或退出">
+                    <span id="fullscreen-icon" class="icon-slot"></span>
+                </button>
+            </section>
+        </div>
 
         <section class="count-switch" aria-label="骰子数量选择">
             <label class="count-label">
@@ -733,7 +761,7 @@
 
         <section class="result-wrapper">
             <div id="result-box" class="result-box">
-                <p id="result-text" class="result-text">总计: 1 点</p>
+                <p id="result-text" class="result-text"><span class="result-number">1</span><span class="result-suffix">点</span></p>
             </div>
         </section>
 
@@ -805,6 +833,17 @@
             themeButton: document.getElementById("theme-toggle"),
             fullscreenButton: document.getElementById("fullscreen-toggle")
         };
+
+        function getSecureRandom(min, max) {
+            const range = max - min + 1;
+            const array = new Uint32Array(1);
+            if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(array);
+                return min + (array[0] % range);
+            } else {
+                return Math.floor(Math.random() * range) + min;
+            }
+        }
 
         const ICONS = {
             soundOn: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.6 9H3v6h3.6L11 19V5Z"></path><path d="M15 9.5a4 4 0 0 1 0 5"></path><path d="M17.9 7a7.3 7.3 0 0 1 0 10"></path></svg>`,
@@ -884,11 +923,11 @@
                 const gainNode = ctx.createGain();
 
                 oscillator.type = "triangle";
-                oscillator.frequency.setValueAtTime(120 + Math.random() * 90, now);
-                oscillator.frequency.exponentialRampToValueAtTime(70 + Math.random() * 60, now + 0.08);
+                oscillator.frequency.setValueAtTime(120 + getSecureRandom(0, 90), now);
+                oscillator.frequency.exponentialRampToValueAtTime(70 + getSecureRandom(0, 60), now + 0.08);
 
                 filter.type = "bandpass";
-                filter.frequency.setValueAtTime(550 + Math.random() * 700, now);
+                filter.frequency.setValueAtTime(550 + getSecureRandom(0, 700), now);
                 filter.Q.value = 6;
 
                 gainNode.gain.setValueAtTime(0.0001, now);
@@ -923,9 +962,9 @@
             for (let i = 0; i < 52; i += 1) {
                 const star = document.createElement("div");
                 star.className = "star";
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.animationDelay = `${Math.random() * 3.4}s`;
+                star.style.left = `${getSecureRandom(0, 10000) / 100}%`;
+                star.style.top = `${getSecureRandom(0, 10000) / 100}%`;
+                star.style.animationDelay = `${getSecureRandom(0, 3400) / 1000}s`;
                 dom.starsContainer.appendChild(star);
             }
         }
@@ -950,15 +989,14 @@
             }
 
             if (state.isRolling) {
-                dom.resultText.textContent = "投掷中...";
+                dom.resultText.innerHTML = '<span class="result-number">...</span>';
                 dom.rollButton.disabled = true;
                 dom.rollButton.textContent = "🔄 骰子滚动中...";
             } else {
                 const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
-                dom.resultText.textContent = `总计: ${total} 点`;
+                dom.resultText.innerHTML = `<span class="result-number">${total}</span><span class="result-suffix">点</span>`;
                 dom.rollButton.disabled = false;
                 dom.rollButton.textContent = "🎲 开始投掷";
-                dom.resultBox.style.borderColor = total <= 3 ? "#f87171" : total <= 7 ? "#fbbf24" : "#34d399";
             }
         }
 
@@ -1167,8 +1205,8 @@
         window.handleCountChange = function (event) {
             if (state.isRolling) return;
             state.diceCount = Number(event.target.value);
-            state.dice1Value = Math.floor(Math.random() * 6) + 1;
-            state.dice2Value = Math.floor(Math.random() * 6) + 1;
+            state.dice1Value = getSecureRandom(1, 6);
+            state.dice2Value = getSecureRandom(1, 6);
             refreshUI();
         };
 
@@ -1205,8 +1243,8 @@
             const frameInterval = 72;
 
             const randomizeFace = () => {
-                state.dice1Value = Math.floor(Math.random() * 6) + 1;
-                state.dice2Value = Math.floor(Math.random() * 6) + 1;
+                state.dice1Value = getSecureRandom(1, 6);
+                state.dice2Value = getSecureRandom(1, 6);
                 renderDiceEl(dom.dice1, state.dice1Value);
                 if (state.diceCount === 2) {
                     renderDiceEl(dom.dice2, state.dice2Value);
@@ -1221,8 +1259,8 @@
                 dom.dice1.classList.remove("shake");
                 dom.dice2.classList.remove("shake");
 
-                state.dice1Value = Math.floor(Math.random() * 6) + 1;
-                state.dice2Value = Math.floor(Math.random() * 6) + 1;
+                state.dice1Value = getSecureRandom(1, 6);
+                state.dice2Value = getSecureRandom(1, 6);
 
                 const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
                 addDistribution(total);
@@ -1235,7 +1273,7 @@
                 setTimeout(() => dom.resultBox.classList.remove("bounce-in"), 500);
 
                 setTimeout(() => {
-                    speakText(`总计${total}点`);
+                    speakText(`${total}点`);
                 }, 80);
             }, rollDuration);
         };
