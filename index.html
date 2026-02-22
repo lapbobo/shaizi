@@ -208,6 +208,34 @@
         body:not(.dark-mode) .star {
             display: none;
         }
+
+        /* 语音选择下拉框样式 */
+        .voice-select {
+            appearance: none;
+            background-color: white;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+
+        .dark-mode .voice-select {
+            background-color: #374151;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        }
+
+        /* 语音设置面板 */
+        .voice-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .voice-panel.open {
+            max-height: 400px;
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -237,10 +265,30 @@
                 <button id="voice-toggle" onclick="toggleVoice()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="语音播报">
                     <span id="voice-icon" class="text-xl">🗣️</span>
                 </button>
+                <!-- 语音设置 -->
+                <button id="voice-settings-toggle" onclick="toggleVoicePanel()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="语音设置">
+                    <span id="voice-settings-icon" class="text-xl">⚙️</span>
+                </button>
                 <!-- 暗黑模式开关 -->
                 <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="切换主题">
                     <span id="theme-icon" class="text-xl">🌙</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- 语音设置面板 -->
+        <div id="voice-panel" class="voice-panel mb-4">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">语音音色</span>
+                    <button onclick="testVoice()" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition-colors">
+                        试听
+                    </button>
+                </div>
+                <select id="voice-select" onchange="changeVoice()" class="voice-select w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <option value="">加载语音中...</option>
+                </select>
+                <p id="voice-preview" class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">当前音色: 温柔女声</p>
             </div>
         </div>
 
@@ -301,7 +349,10 @@
             soundEnabled: true,
             voiceEnabled: true,
             totalRolls: 0,
-            isDarkMode: false
+            isDarkMode: false,
+            lastShakeTime: 0,
+            selectedVoice: null,
+            availableVoices: []
         };
 
         // DOM 元素
@@ -315,7 +366,11 @@
             voiceIcon: document.getElementById('voice-icon'),
             themeIcon: document.getElementById('theme-icon'),
             totalRolls: document.getElementById('total-rolls'),
-            starsContainer: document.getElementById('stars-container')
+            starsContainer: document.getElementById('stars-container'),
+            voicePanel: document.getElementById('voice-panel'),
+            voiceSelect: document.getElementById('voice-select'),
+            voicePreview: document.getElementById('voice-preview'),
+            voiceSettingsIcon: document.getElementById('voice-settings-icon')
         };
 
         // 使用 AudioContext 生成音效
@@ -393,6 +448,97 @@
             }
         }
 
+        // 加载可用语音
+        function loadVoices() {
+            if ('speechSynthesis' in window) {
+                const voices = speechSynthesis.getVoices();
+                state.availableVoices = voices.filter(v => v.lang.includes('zh') || v.lang.includes('CN'));
+                
+                // 如果没有中文语音，使用所有语音
+                if (state.availableVoices.length === 0) {
+                    state.availableVoices = voices;
+                }
+                
+                // 选择温柔女声（优先选择中英文混合的女声）
+                let defaultVoice = state.availableVoices.find(v => 
+                    v.name.includes('Ting') || 
+                    v.name.includes('Kang') ||
+                    v.name.includes('Kangkang') ||
+                    v.name.includes('Xiaoxiao') ||
+                    v.name.includes('Yaoyao') ||
+                    (v.name.toLowerCase().includes('female') && v.lang.includes('zh'))
+                );
+                
+                // 如果没有找到特定的温柔女声，选择第一个中文语音
+                if (!defaultVoice && state.availableVoices.length > 0) {
+                    defaultVoice = state.availableVoices[0];
+                }
+                
+                state.selectedVoice = defaultVoice;
+                updateVoiceSelect();
+                updateVoicePreview();
+            }
+        }
+
+        // 更新语音选择下拉框
+        function updateVoiceSelect() {
+            dom.voiceSelect.innerHTML = '';
+            
+            if (state.availableVoices.length === 0) {
+                const option = document.createElement('option');
+                option.text = '暂无可用语音';
+                dom.voiceSelect.add(option);
+                return;
+            }
+            
+            state.availableVoices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.text = `${voice.name} (${voice.lang})`;
+                if (state.selectedVoice && voice.name === state.selectedVoice.name) {
+                    option.selected = true;
+                }
+                dom.voiceSelect.add(option);
+            });
+        }
+
+        // 更新语音预览文本
+        function updateVoicePreview() {
+            if (state.selectedVoice) {
+                const voiceName = state.selectedVoice.name;
+                if (voiceName.includes('Ting') || voiceName.includes('Yaoyao')) {
+                    dom.voicePreview.textContent = '当前音色: 温柔女声';
+                } else if (voiceName.includes('Kang') || voiceName.includes('Kangkang')) {
+                    dom.voicePreview.textContent = '当前音色: 温柔男声';
+                } else {
+                    dom.voicePreview.textContent = `当前音色: ${voiceName}`;
+                }
+            } else {
+                dom.voicePreview.textContent = '当前音色: 默认';
+            }
+        }
+
+        // 切换语音面板
+        window.toggleVoicePanel = function() {
+            dom.voicePanel.classList.toggle('open');
+            dom.voiceSettingsIcon.textContent = dom.voicePanel.classList.contains('open') ? '✖️' : '⚙️';
+        }
+
+        // 更改语音
+        window.changeVoice = function() {
+            const index = dom.voiceSelect.value;
+            if (index !== '') {
+                state.selectedVoice = state.availableVoices[parseInt(index)];
+                updateVoicePreview();
+                testVoice();
+            }
+        }
+
+        // 试听语音
+        window.testVoice = function() {
+            speakText('你好，这是语音测试');
+        }
+
         // 中文语音播报
         function speakText(text) {
             if (!state.voiceEnabled) return;
@@ -405,6 +551,10 @@
                 utterance.rate = 1;
                 utterance.pitch = 1;
                 utterance.volume = 1;
+                
+                if (state.selectedVoice) {
+                    utterance.voice = state.selectedVoice;
+                }
                 
                 window.speechSynthesis.speak(utterance);
             } else {
@@ -516,8 +666,16 @@
         // 摇晃检测
         let lastX, lastY, lastZ;
         const SHAKE_THRESHOLD = 15;
+        const SHAKE_COOLDOWN = 2000; // 2秒冷却时间
 
         function handleMotion(e) {
+            const currentTime = Date.now();
+            
+            // 检查冷却时间
+            if (currentTime - state.lastShakeTime < SHAKE_COOLDOWN) {
+                return;
+            }
+            
             if (state.isRolling) return;
 
             const current = e.accelerationIncludingGravity;
@@ -529,6 +687,7 @@
                 const deltaZ = Math.abs(current.z - lastZ);
 
                 if (deltaX + deltaY + deltaZ > SHAKE_THRESHOLD) {
+                    state.lastShakeTime = currentTime;
                     rollDice();
                 }
             }
@@ -557,6 +716,7 @@
 
             state.isRolling = true;
             state.totalRolls++;
+            state.lastShakeTime = Date.now();
             dom.totalRolls.textContent = state.totalRolls;
             refreshUI();
 
@@ -597,6 +757,11 @@
         }
 
         // 初始化
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
+        
         createStars();
         refreshUI();
     </script>
