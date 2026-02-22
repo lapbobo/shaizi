@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 幸运掷骰子</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 3D 骰子容器 */
+        .dice-container-3d {
+            perspective: 1000px;
+        }
+
+        /* 骰子主容器样式 */
+        .dice {
+            width: 7rem;
+            height: 7rem;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border-radius: 1.5rem;
+            position: relative;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.15),
+                0 8px 16px rgba(0, 0, 0, 0.1),
+                inset 0 -8px 16px rgba(0, 0, 0, 0.05),
+                inset 0 8px 16px rgba(255, 255, 255, 0.9);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 10%;
+            gap: 6%;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+
+        .dark-mode .dice {
+            background: linear-gradient(145deg, #374151, #1f2937);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                inset 0 -8px 16px rgba(0, 0, 0, 0.3),
+                inset 0 8px 16px rgba(255, 255, 255, 0.1);
+        }
+
+        /* 骰子点样式 */
+        .dot {
+            background: radial-gradient(circle at 35% 35%, #6b7280, #1f2937);
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            box-shadow: 
+                inset 0 3px 6px rgba(0, 0, 0, 0.5), 
+                0 2px 4px rgba(255, 255, 255, 0.6),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .dark-mode .dot {
+            background: radial-gradient(circle at 35% 35%, #9ca3af, #4b5563);
+        }
+
+        /* 摇晃动画 - 更流畅 */
+        @keyframes shake {
+            0% { transform: rotate(0deg) translate(0, 0) scale(1); }
+            15% { transform: rotate(-15deg) translate(-6px, -3px) scale(1.05); }
+            30% { transform: rotate(12deg) translate(6px, 3px) scale(1.03); }
+            45% { transform: rotate(-12deg) translate(-4px, 6px) scale(1.02); }
+            60% { transform: rotate(8deg) translate(4px, -6px) scale(1.01); }
+            75% { transform: rotate(-6deg) translate(-2px, 4px) scale(1); }
+            100% { transform: rotate(0deg) translate(0, 0) scale(1); }
+        }
+
+        .shake {
+            animation: shake 0.15s infinite;
+        }
+
+        /* 结果弹跳动画 */
+        @keyframes bounce-in {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .bounce-in {
+            animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* 单选按钮样式 */
+        .radio-label input:checked+div {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .dark-mode .radio-label input:checked+div {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        /* 切换开关样式 */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: #d1d5db;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        /* 按钮悬浮效果 */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-glow:hover::before {
+            left: 100%;
+        }
+
+        /* 暗黑模式背景 */
+        .dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+
+        /* 玻璃拟态卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .dark-mode .glass-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 骰点网格分布位置 */
+        .dot-tl { grid-area: 1 / 1 / 2 / 2; }
+        .dot-tr { grid-area: 1 / 3 / 2 / 4; }
+        .dot-ml { grid-area: 2 / 1 / 3 / 2; }
+        .dot-mc { grid-area: 2 / 2 / 3 / 3; }
+        .dot-mr { grid-area: 2 / 3 / 3 / 4; }
+        .dot-bl { grid-area: 3 / 1 / 4 / 2; }
+        .dot-br { grid-area: 3 / 3 / 4 / 4; }
+
+        /* 星星闪烁动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        .dark-mode .star {
+            display: block;
+        }
+
+        body:not(.dark-mode) .star {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center min-h-screen w-full relative overflow-hidden">
+
+    <!-- 背景装饰图案 -->
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wMykiLz48L3N2Zz4=')] opacity-30"></div>
+
+    <!-- 暗黑模式星星背景 -->
+    <div id="stars-container" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- 主容器 -->
+    <div class="glass-card w-full max-w-md mx-4 rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] p-8 relative z-10">
+
+        <!-- 顶部工具栏 -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-extrabold text-gray-800 dark:text-white tracking-tight flex items-center gap-2">
+                <span class="text-3xl drop-shadow-md">🎲</span>
+                幸运掷骰子
+            </h1>
+            <div class="flex gap-2">
+                <!-- 音效开关 -->
+                <button id="sound-toggle" onclick="toggleSound()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="音效开关">
+                    <span id="sound-icon" class="text-xl">🔊</span>
+                </button>
+                <!-- 暗黑模式开关 -->
+                <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" title="切换主题">
+                    <span id="theme-icon" class="text-xl">🌙</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 数量选择区 -->
+        <div class="flex justify-center mb-8">
+            <div class="flex bg-gray-100 dark:bg-gray-700 p-1.5 rounded-2xl shadow-inner w-full max-w-[220px]">
+                <label class="radio-label flex-1 cursor-pointer">
+                    <input type="radio" name="diceCount" value="1" class="hidden" checked onchange="handleCountChange(event)">
+                    <div class="text-center py-3 rounded-xl text-gray-600 dark:text-gray-300 font-semibold transition-all duration-300">
+                        1 个骰子
+                    </div>
+                </label>
+                <label class="radio-label flex-1 cursor-pointer">
+                    <input type="radio" name="diceCount" value="2" class="hidden" onchange="handleCountChange(event)">
+                    <div class="text-center py-3 rounded-xl text-gray-600 dark:text-gray-300 font-semibold transition-all duration-300">
+                        2 个骰子
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- 骰子展示区 -->
+        <div class="flex justify-center items-center gap-8 min-h-[140px] mb-8 dice-container-3d" id="dice-container">
+            <div id="dice1" class="dice"></div>
+            <div id="dice2" class="dice hidden"></div>
+        </div>
+
+        <!-- 结果显示区 -->
+        <div class="text-center mb-8 h-12 flex items-center justify-center">
+            <div id="result-box" class="px-8 py-3 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-blue-800 transition-all duration-300">
+                <p id="result-text" class="text-2xl font-bold text-gray-700 dark:text-white">
+                    总计: 1 点
+                </p>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <button id="roll-button" onclick="rollDice()" class="btn-glow w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:scale-95 text-white font-bold text-xl py-4 rounded-2xl transition-all duration-200 shadow-xl shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2">
+            🎲 开始投掷
+        </button>
+
+        <!-- 统计信息 -->
+        <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>总投掷次数: <span id="total-rolls" class="font-bold text-blue-600 dark:text-blue-400">0</span></p>
+        </div>
+
+    </div>
+
+    <!-- 逻辑脚本 -->
+    <script>
+        // 状态管理
+        const state = {
+            diceCount: 1,
+            isRolling: false,
+            dice1Value: 1,
+            dice2Value: 1,
+            shakePermissionGranted: false,
+            soundEnabled: true,
+            totalRolls: 0,
+            isDarkMode: false
+        };
+
+        // DOM 元素
+        const dom = {
+            dice1: document.getElementById('dice1'),
+            dice2: document.getElementById('dice2'),
+            resultText: document.getElementById('result-text'),
+            resultBox: document.getElementById('result-box'),
+            rollButton: document.getElementById('roll-button'),
+            soundIcon: document.getElementById('sound-icon'),
+            themeIcon: document.getElementById('theme-icon'),
+            totalRolls: document.getElementById('total-rolls'),
+            starsContainer: document.getElementById('stars-container')
+        };
+
+        // 音频对象
+        const rollSound = new Audio('https://freesound.org/data/previews/274/274183_4284968-lq.mp3');
+        rollSound.preload = 'auto';
+
+        // 结果音效
+        const resultSounds = {
+            low: new Audio('https://freesound.org/data/previews/321/321947_5180442-lq.mp3'),
+            medium: new Audio('https://freesound.org/data/previews/428/428706_8910638-lq.mp3'),
+            high: new Audio('https://freesound.org/data/previews/396/396908_5020555-lq.mp3')
+        };
+        Object.values(resultSounds).forEach(sound => sound.preload = 'auto');
+
+        // 骰子点数配置
+        const diceFaces = {
+            1: ['dot-mc'],
+            2: ['dot-tl', 'dot-br'],
+            3: ['dot-tl', 'dot-mc', 'dot-br'],
+            4: ['dot-tl', 'dot-tr', 'dot-bl', 'dot-br'],
+            5: ['dot-tl', 'dot-tr', 'dot-mc', 'dot-bl', 'dot-br'],
+            6: ['dot-tl', 'dot-tr', 'dot-ml', 'dot-mr', 'dot-bl', 'dot-br']
+        };
+
+        // 创建星星背景
+        function createStars() {
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                dom.starsContainer.appendChild(star);
+            }
+        }
+
+        // 渲染骰子
+        function renderDiceEl(diceEl, value) {
+            diceEl.innerHTML = '';
+            const classes = diceFaces[value];
+            classes.forEach(cls => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${cls}`;
+                diceEl.appendChild(dot);
+            });
+        }
+
+        // 刷新UI
+        function refreshUI() {
+            renderDiceEl(dom.dice1, state.dice1Value);
+
+            if (state.diceCount === 2) {
+                dom.dice2.classList.remove('hidden');
+                renderDiceEl(dom.dice2, state.dice2Value);
+            } else {
+                dom.dice2.classList.add('hidden');
+            }
+
+            if (!state.isRolling) {
+                const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
+                dom.resultText.textContent = `总计: ${total} 点`;
+                dom.rollButton.disabled = false;
+                dom.rollButton.innerHTML = '🎲 开始投掷';
+                
+                // 结果颜色
+                dom.resultBox.style.borderColor = total <= 3 ? '#f87171' : total <= 6 ? '#fbbf24' : '#34d399';
+            } else {
+                dom.resultText.textContent = '投掷中...';
+                dom.rollButton.disabled = true;
+                dom.rollButton.innerHTML = '🔄 滚动中...';
+            }
+        }
+
+        // 播放音效
+        function playSound(type = 'roll') {
+            if (!state.soundEnabled) return;
+
+            try {
+                if (type === 'roll') {
+                    rollSound.currentTime = 0;
+                    rollSound.play();
+                } else if (type === 'result') {
+                    const total = state.diceCount === 1 ? state.dice1Value : state.dice1Value + state.dice2Value;
+                    const sound = total <= 4 ? resultSounds.low : total <= 8 ? resultSounds.medium : resultSounds.high;
+                    sound.currentTime = 0;
+                    sound.play();
+                }
+            } catch (e) {
+                console.log("音效播放失败", e);
+            }
+        }
+
+        // 切换音效
+        window.toggleSound = function() {
+            state.soundEnabled = !state.soundEnabled;
+            dom.soundIcon.textContent = state.soundEnabled ? '🔊' : '🔇';
+        }
+
+        // 切换主题
+        window.toggleTheme = function() {
+            state.isDarkMode = !state.isDarkMode;
+            document.body.classList.toggle('dark-mode', state.isDarkMode);
+            dom.themeIcon.textContent = state.isDarkMode ? '☀️' : '🌙';
+        }
+
+        // 申请摇晃权限
+        function requestShakePermission() {
+            if (state.shakePermissionGranted) return;
+
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('devicemotion', handleMotion);
+                            state.shakePermissionGranted = true;
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                window.addEventListener('devicemotion', handleMotion);
+                state.shakePermissionGranted = true;
+            }
+        }
+
+        // 摇晃检测
+        let lastX, lastY, lastZ;
+        const SHAKE_THRESHOLD = 15;
+
+        function handleMotion(e) {
+            if (state.isRolling) return;
+
+            const current = e.accelerationIncludingGravity;
+            if (!current) return;
+
+            if (lastX !== undefined) {
+                const deltaX = Math.abs(current.x - lastX);
+                const deltaY = Math.abs(current.y - lastY);
+                const deltaZ = Math.abs(current.z - lastZ);
+
+                if (deltaX + deltaY + deltaZ > SHAKE_THRESHOLD) {
+                    rollDice();
+                }
+            }
+
+            lastX = current.x;
+            lastY = current.y;
+            lastZ = current.z;
+        }
+
+        // 切换骰子数量
+        window.handleCountChange = function(e) {
+            if (state.isRolling) return;
+            state.diceCount = parseInt(e.target.value);
+            state.dice1Value = Math.floor(Math.random() * 6) + 1;
+            state.dice2Value = Math.floor(Math.random() * 6) + 1;
+            refreshUI();
+            playSound('roll');
+        }
+
+        // 投掷骰子
+        window.rollDice = function() {
+            if (state.isRolling) return;
+
+            requestShakePermission();
+            playSound('roll');
+
+            state.isRolling = true;
+            state.totalRolls++;
+            dom.totalRolls.textContent = state.totalRolls;
+            refreshUI();
+
+            dom.dice1.classList.add('shake');
+            if (state.diceCount === 2) dom.dice2.classList.add('shake');
+
+            const rollDuration = 600;
+            const intervalTime = 80;
+
+            let rollInterval = setInterval(() => {
+                state.dice1Value = Math.floor(Math.random() * 6) + 1;
+                state.dice2Value = Math.floor(Math.random() * 6) + 1;
+                renderDiceEl(dom.dice1, state.dice1Value);
+                if (state.diceCount === 2) renderDiceEl(dom.dice2, state.dice2Value);
+            }, intervalTime);
+
+            setTimeout(() => {
+                clearInterval(rollInterval);
+                dom.dice1.classList.remove('shake');
+                dom.dice2.classList.remove('shake');
+
+                state.dice1Value = Math.floor(Math.random() * 6) + 1;
+                state.dice2Value = Math.floor(Math.random() * 6) + 1;
+
+                state.isRolling = false;
+                
+                // 添加弹跳动画
+                dom.resultBox.classList.add('bounce-in');
+                setTimeout(() => dom.resultBox.classList.remove('bounce-in'), 500);
+                
+                refreshUI();
+                playSound('result');
+            }, rollDuration);
+        }
+
+        // 初始化
+        createStars();
+        refreshUI();
+    </script>
+</body>
+
+</html>
