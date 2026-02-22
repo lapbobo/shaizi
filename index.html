@@ -770,19 +770,19 @@
         <button id="stats-trigger" class="stats-trigger" onclick="toggleStatsModal(true)">统计分布</button>
     </main>
 
-    <div id="stats-modal" class="stats-modal" aria-hidden="true">
-        <div class="stats-card">
-            <div class="stats-header">
-                <h2>投掷点数分布统计</h2>
-                <button class="mini-btn" onclick="toggleStatsModal(false)">关闭</button>
-            </div>
-            <p id="stats-summary" class="stats-summary">暂无投掷数据，开始投掷后会自动统计。</p>
-            <div id="stats-chart" class="stats-chart"></div>
-            <div class="stats-actions">
-                <button class="mini-btn secondary" onclick="resetStats()">重置统计结果</button>
+        <div id="stats-modal" class="stats-modal" aria-hidden="true">
+            <div class="stats-card">
+                <div class="stats-header">
+                    <h2 id="stats-title">投掷点数分布统计</h2>
+                    <button class="mini-btn" onclick="toggleStatsModal(false)">关闭</button>
+                </div>
+                <p id="stats-summary" class="stats-summary">暂无投掷数据，开始投掷后会自动统计。</p>
+                <div id="stats-chart" class="stats-chart"></div>
+                <div class="stats-actions">
+                    <button class="mini-btn secondary" onclick="resetStats()">重置当前统计</button>
+                </div>
             </div>
         </div>
-    </div>
 
     <script>
         const voiceProfiles = [
@@ -792,7 +792,7 @@
                 rate: 1,
                 pitch: 1,
                 volume: 1,
-                keywords: ["google", "xiaoxiao", "zh-cn", "chinese"]
+                keywords: ["xiaoxiao", "google", "zh-cn", "chinese"]
             }
         ];
 
@@ -808,7 +808,10 @@
             lastShakeTime: 0,
             selectedProfileIndex: 0,
             availableVoices: [],
-            distribution: Array.from({ length: 13 }, () => 0),
+            distribution: {
+                1: Array.from({ length: 7 }, () => 0),
+                2: Array.from({ length: 13 }, () => 0)
+            },
             rollingSoundTimer: null,
             isFullscreen: false,
             currentVoice: null
@@ -825,6 +828,7 @@
             themeIcon: document.getElementById("theme-icon"),
             fullscreenIcon: document.getElementById("fullscreen-icon"),
             statsModal: document.getElementById("stats-modal"),
+            statsTitle: document.getElementById("stats-title"),
             statsChart: document.getElementById("stats-chart"),
             statsSummary: document.getElementById("stats-summary"),
             starsContainer: document.getElementById("stars-container"),
@@ -1019,23 +1023,36 @@
             state.availableVoices = allVoices;
 
             const profile = voiceProfiles[0];
-            const voice = allVoices.find((v) => {
+
+            let voice = allVoices.find((v) => {
                 const text = normalizeText(`${v.name} ${v.lang}`);
-                return profile.keywords.some((keyword) => text.includes(keyword));
+                return text.includes("xiaoxiao");
             });
+
+            if (!voice) {
+                voice = allVoices.find((v) => {
+                    const text = normalizeText(`${v.name} ${v.lang}`);
+                    return text.includes("google") && text.includes("zh-cn");
+                });
+            }
+
+            if (!voice) {
+                voice = allVoices.find((v) => {
+                    const text = normalizeText(`${v.name} ${v.lang}`);
+                    return /zh|cmn|chinese/.test(text) && /female|女/.test(text);
+                });
+            }
+
+            if (!voice) {
+                voice = allVoices.find((v) => {
+                    const text = normalizeText(`${v.lang}`);
+                    return /zh|cmn|chinese/.test(text);
+                });
+            }
 
             if (voice) {
                 profile.voice = voice;
                 state.currentVoice = voice;
-            } else {
-                const zhVoice = allVoices.find((v) => {
-                    const text = normalizeText(`${v.lang}`);
-                    return /zh|cmn|chinese/.test(text);
-                });
-                if (zhVoice) {
-                    profile.voice = zhVoice;
-                    state.currentVoice = zhVoice;
-                }
             }
         }
 
@@ -1070,16 +1087,21 @@
         }
 
         function getTotalSamples() {
-            return state.distribution.reduce((sum, value) => sum + value, 0);
+            const dist = state.distribution[state.diceCount];
+            return dist ? dist.reduce((sum, value) => sum + value, 0) : 0;
         }
 
         function renderStatsChart() {
-            const values = state.distribution.slice(1);
+            const diceCount = state.diceCount;
+            const dist = state.distribution[diceCount];
+            const startValue = diceCount === 1 ? 1 : 2;
+            const endValue = diceCount === 1 ? 6 : 12;
+            const values = dist.slice(startValue);
             const maxCount = Math.max(1, ...values);
             dom.statsChart.innerHTML = "";
 
-            for (let point = 1; point <= 12; point += 1) {
-                const count = state.distribution[point];
+            for (let point = startValue; point <= endValue; point += 1) {
+                const count = dist[point];
                 const ratio = count / maxCount;
                 const barHeight = count === 0 ? 4 : Math.max(12, ratio * 100);
 
@@ -1096,14 +1118,16 @@
             }
 
             const totalSamples = getTotalSamples();
+            const modeText = diceCount === 1 ? "1个骰子" : "2个骰子";
             dom.statsSummary.textContent = totalSamples > 0
-                ? `已记录 ${totalSamples} 次投掷结果，点击下方可重置。`
-                : "暂无投掷数据，开始投掷后会自动统计。";
+                ? `${modeText} 已记录 ${totalSamples} 次投掷结果。`
+                : `${modeText} 暂无投掷数据，开始投掷后会自动统计。`;
         }
 
         function addDistribution(total) {
-            if (total >= 1 && total <= 12) {
-                state.distribution[total] += 1;
+            const dist = state.distribution[state.diceCount];
+            if (dist && total >= 0 && total < dist.length) {
+                dist[total] += 1;
             }
             renderStatsChart();
         }
@@ -1215,12 +1239,17 @@
             dom.statsModal.classList.toggle("open", shouldOpen);
             dom.statsModal.setAttribute("aria-hidden", String(!shouldOpen));
             if (shouldOpen) {
+                const title = state.diceCount === 1 ? "1个骰子" : "2个骰子";
+                dom.statsTitle.textContent = `${title}投掷点数分布`;
                 renderStatsChart();
             }
         };
 
         window.resetStats = function () {
-            state.distribution.fill(0);
+            const dist = state.distribution[state.diceCount];
+            if (dist) {
+                dist.fill(0);
+            }
             renderStatsChart();
         };
 
